@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Page not found{% endblock %}
+
+{% block header %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block body %}
+    <div class="w-4/5 m-auto text-center min-h-full h-screen flex flex-col items-center justify-center">
+        <h1 class="uppercase font-bold text-5xl text-gray-800 pb-8">
+            404
+        </h1>
+        <p class="font-light text-gray-500 italic pb-12">
+            Even Chuck Norris couldn't find this page.
+        </p>
+        <a href="{{ path('app_homepage') }}" class="uppercase font-bold border border-gray-300 bg-yellow-400 text-gray-800 text-lg py-4 px-12 rounded transition transition-all shadow-xl hover:border hover:border-gray-300 hover:bg-indigo-400 hover:text-white">Back to safety</a>
+    </div>
+{% endblock %}
