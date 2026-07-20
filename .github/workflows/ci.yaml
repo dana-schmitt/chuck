@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      database:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: chuckme
+          MYSQL_DATABASE: joke
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -uroot -pchuckme"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      APP_ENV: test
+      DATABASE_URL: mysql://root:chuckme@127.0.0.1:3306/joke?serverVersion=8.0.32&charset=utf8mb4
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: ctype, iconv, intl, pdo_mysql, opcache
+          coverage: none
+
+      - name: Validate composer.json
+        run: composer validate --strict
+
+      - name: Install dependencies
+        run: composer install --no-progress --prefer-dist
+
+      - name: Run database migrations
+        run: php bin/console doctrine:migrations:migrate --no-interaction
+
+      - name: Run tests
+        run: php bin/phpunit
+
+      - name: Audit dependencies for known vulnerabilities
+        run: composer audit

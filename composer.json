@@ -1,4 +1,6 @@
 {
+    "name": "chuckify/chuckify",
+    "description": "Chuck Norris jokes hub built with Symfony.",
     "type": "project",
     "license": "proprietary",
     "minimum-stability": "stable",
@@ -19,6 +21,7 @@
         "symfony/form": "7.4.*",
         "symfony/framework-bundle": "7.4.*",
         "symfony/http-client": "7.4.*",
+        "symfony/monolog-bundle": "^4.0",
         "symfony/rate-limiter": "7.4.*",
         "symfony/runtime": "7.4.*",
         "symfony/security-bundle": "7.4.*",
