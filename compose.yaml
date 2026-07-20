@@ -1,3 +1,5 @@
+name: chuckify-dev
+
 services:
 ###> doctrine/doctrine-bundle ###
   database:

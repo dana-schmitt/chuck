@@ -14,6 +14,14 @@ framework:
             chuck_norris_jokes.client:
                 base_uri: 'https://api.chucknorris.io'
 
+when@prod:
+    framework:
+        # The app runs behind a reverse proxy (see compose.prod.yaml) which terminates TLS and
+        # forwards X-Forwarded-* headers. Trust only that proxy so client-supplied headers can't
+        # be used to spoof the client IP or scheme.
+        trusted_proxies: '%env(default::TRUSTED_PROXIES)%'
+        trusted_headers: ['x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto', 'x-forwarded-port']
+
 when@test:
     framework:
         test: true

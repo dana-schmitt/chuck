@@ -1,0 +1,49 @@
+name: chuckify-prod
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    restart: always
+    environment:
+      APP_ENV: prod
+      APP_DEBUG: '0'
+      DATABASE_URL: ${DATABASE_URL}
+      APP_SECRET: ${APP_SECRET}
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-}
+    depends_on:
+      database:
+        condition: service_healthy
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: nginx
+    restart: always
+    ports:
+      - '80:80'
+    depends_on:
+      - app
+
+  database:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'joke'
+      MYSQL_USER: chuck
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-uroot', '-p${MYSQL_ROOT_PASSWORD}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - database_data:/var/lib/mysql
+
+volumes:
+  database_data:
+    driver: local
