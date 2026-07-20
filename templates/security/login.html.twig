@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>{% block title %}Log in!{% endblock %}</title>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text></svg>">
+        {% block stylesheets %}<link rel="stylesheet" href="{{ asset('build/app.css') }}">{% endblock %}
+        {% block javascripts %}{{ encore_entry_script_tags('app') }}{% endblock %}
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.3.5/dist/alpine.min.js" defer></script>
+    </head>
+    <body class="bg-white-100 h-screen antialiased leading-none font-sans">
+
+{% block body %}
+<form method="post">
+    {% if error %}
+        <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+    {% endif %}
+
+    {% if app.user %}
+        <div class="mb-3">
+            You are logged in as {{ app.user.email }}, <a href="{{ path('app_logout') }}">Logout</a>
+        </div>
+    {% endif %}
+
+    <div class="w-4/5 m-auto text-center">
+        <div class="py-12 ">
+            <h1 class="uppercase font-bold text-5xl text-gray-800 pt-48 pb-8">
+                Let's Chuck In
+            </h1>
+    
+            <input 
+                type="email" 
+                value="{{ last_username }}" 
+                name="email" 
+                id="inputEmail" 
+                class="bg-transparent block mt-10 mx-auto border-b-2 w-2/5 h-20 text-lg outline-none" 
+                placeholder="Email"
+                autocomplete="email" 
+                required 
+                autofocus
+            >
+
+            <input 
+                type="password" 
+                name="password" 
+                id="inputPassword" 
+                class="bg-transparent block mt-10 mx-auto border-b-2 w-2/5 h-20 text-lg outline-none" 
+                autocomplete="current-password" 
+                placeholder="Password"
+                required
+            >
+
+            <input 
+                type="hidden" 
+                name="_csrf_token"
+                value="{{ csrf_token('authenticate') }}"
+            >
+
+            <button type="submit"
+class="uppercase mt-16 font-bold border border-gray-300 bg-yellow-400 text-gray-800 text-lg py-4 px-12 rounded transition transition-all shadow-xl hover:border hover:border-gray-300 hover:bg-indigo-400 hover:text-zinc-100">
+                Chuck in
+            </button>
+        </form>
+        
+    </div>
+    <a href="/register" class="underline text-gray-800  py-4 px-12 transition transition-all hover:text-zinc-500">don't have an account? → Chuckify Yourself</a>
+</div>
+{% endblock %}

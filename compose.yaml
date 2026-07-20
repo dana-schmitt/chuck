@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+###> doctrine/doctrine-bundle ###
+  database:
+    image: mysql:8.0
+    #command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'joke'
+      MYSQL_USER: chuck
+      MYSQL_PASSWORD: norris
+      MYSQL_ROOT_PASSWORD: chuckme
+    #ports:
+    #  - '3306:3306'
+    #expose:
+    #  - 3306
+    #volumes:
+    #  - database_data:/var/lib/mysql
+###< doctrine/doctrine-bundle ###
+
+volumes:
+###> doctrine/doctrine-bundle ###
+  database_data:
+    driver: local
+###< doctrine/doctrine-bundle ###

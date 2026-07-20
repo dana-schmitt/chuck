@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>{% block title %}Register{% endblock %}</title>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text></svg>">
+        {% block stylesheets %}<link rel="stylesheet" href="{{ asset('build/app.css') }}">{% endblock %}
+        {% block javascripts %}{{ encore_entry_script_tags('app') }}{% endblock %}
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.3.5/dist/alpine.min.js" defer></script>
+    </head>
+    <body class="bg-white-100 h-screen antialiased leading-none font-sans">
+
+{% block body %}
+    <div class="w-4/5 m-auto text-center">
+        <div class="py-12">
+            <h1 class="uppercase font-bold text-5xl text-gray-800 pt-48 pb-8">
+                Chuckify Yourself
+            </h1>
+
+            {{ form_start(registrationForm) }}
+                {{ form_row(registrationForm.email) }}
+                {{ form_row(registrationForm.plainPassword) }}
+            
+            
+            <button 
+                type="submit" 
+               class="uppercase mt-16 font-bold border border-gray-300 bg-yellow-400 text-gray-800 text-lg py-4 px-12 rounded transition transition-all shadow-xl hover:border hover:border-gray-300 hover:bg-indigo-400 hover:text-zinc-100">
+                CHUCK ME
+            </button>
+
+            {{ form_end(registrationForm) }}
+
+        </div>
+            <a href="/login" class="underline text-gray-800  py-4 px-12 transition transition-all hover:text-zinc-500">already have an account?  → Chuck in</a>
+    </div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+
+    <div class="w-4/5 m-auto text-center min-h-full h-screen">
+
+        <div class="pb-8 border-b border-gray-200">
+            <h1 class="uppercase font-bold text-5xl text-gray-800 pt-36 pb-8">
+               Chuck Norris
+            </h1>
+            <span class="font-light text-gray-500 italic">
+                Jokes Hub
+                {% if app.user %}
+                    for  {{app.user.email}}
+                {% endif %}
+            </span>
+        </div>
+
+        <section class="hero container  mx-auto pt-12 flex">
+            <img src="{{ asset('build/images/chuck.b5edacb6.png') }}" class="mx-auto h-64">
+        </section>
+    {% if app.user %}
+        <div d="joke-container" class="w-3/5 m-auto pt-12 text-center">
+            <p class="text-xl text-gray-700 font-light">{{ joke }}</p>
+        </div>
+
+        <div class="text-center pt-12 pb-24">
+            <a href="/joke" class="uppercase font-bold border border-gray-300 bg-yellow-400 text-gray-800 text-lg py-4 px-12 rounded transition transition-all shadow-xl hover:border hover:border-gray-300 hover:bg-indigo-400 hover:text-white">CHUCK ME</a>
+        </div>
+    {% endif %}
+    </div>
+{% endblock %}
