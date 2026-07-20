@@ -4,25 +4,20 @@
         <meta charset="UTF-8">
         <title>{% block title %}Chuck Norris Jokes Hub{% endblock %}</title>
         <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text></svg>">
-        {% block stylesheets %}<link rel="stylesheet" href="{{ asset('build/app.css') }}">{% endblock %}
-        {% block javascripts %}{{ encore_entry_script_tags('app') }}{% endblock %}
-        <script src="https://cdn.tailwindcss.com"></script>
-        <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.3.5/dist/alpine.min.js" defer></script>
+        {% block importmap %}{{ importmap('app') }}{% endblock %}
     </head>
     <body class="bg-white-100 h-screen antialiased leading-none font-sans">
             {% block header %}
                 <header>
                     <nav
-                            class="flex items-center justify-between shadow-xl flex-wrap p-6 fixed w-full z-10 top-0"
-                            x-data="{ isOpen: false }"
-                            @keydown.escape="isOpen = false"
-                            :class="{ 'shadow-lg bg-gray-400' : isOpen , 'bg-gray-600' : !isOpen}">
+                            class="flex items-center justify-between shadow-xl flex-wrap p-6 fixed w-full z-10 top-0 bg-gray-600"
+                            data-controller="nav-toggle"
+                            data-action="click@window->nav-toggle#closeOnClickOutside">
 
                         <button
-                                @click="isOpen = !isOpen"
+                                data-action="nav-toggle#toggle"
                                 type="button"
-                                class="block lg:hidden px-2 text-gray-300 transition transition-all hover:text-gray-100 focus:outline-none focus:text-gray-100"
-                                :class="{ 'transition transform-180': isOpen }">
+                                class="block lg:hidden px-2 text-gray-300 transition transition-all hover:text-gray-100 focus:outline-none focus:text-gray-100">
 
                             <svg
                                     class="h-12 w-12 fill-current"
@@ -30,14 +25,15 @@
                                     viewBox="0 0 24 24">
 
                                 <path
-                                        x-show="isOpen"
+                                        data-nav-toggle-target="closeIcon"
+                                        class="hidden"
                                         fill-rule="evenodd"
                                         clip-rule="evenodd"
                                         d="M18.278 16.864a1 1 0 0 1-1.414 1.414l-4.829-4.828-4.828 4.828a1 1 0 0 1-1.414-1.414l4.828-4.829-4.828-4.828a1 1 0 0 1 1.414-1.414l4.829 4.828 4.828-4.828a1 1 0 1 1 1.414 1.414l-4.828 4.829 4.828 4.828z"
                                 />
 
                                 <path
-                                        x-show="!isOpen"
+                                        data-nav-toggle-target="openIcon"
                                         fill-rule="evenodd"
                                         d="M4 5h16a1 1 0 0 1 0 2H4a1 1 0 1 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2z"
                                 />
@@ -45,19 +41,17 @@
                         </button>
 
                         <div
-                                class="w-full flex-grow lg:flex lg:items-center lg:w-auto"
-                                :class="{ 'block shadow-3xl': isOpen, 'hidden': !isOpen }"
-                                @click.away="isOpen = false"
-                                x-show.transition="true">
+                                data-nav-toggle-target="menu"
+                                class="w-full flex-grow hidden lg:flex lg:items-center lg:w-auto">
 
                             <ul class="pt-6 lg:pt-0 list-reset lg:flex justify-end flex-1 items-center">
                                 <li class="mr-3">
                                     <a
                                             class="uppercase inline-block text-gray-100 font-bold no-underline hover:text-gray-200 hover:text-underline py-2 px-4"
                                             href="/{{ app.user ? 'logout' : 'login'}}"
-                                            @click="isOpen = false">
+                                            data-action="nav-toggle#close">
                                             {% if app.user %}
-                                               Chuckout 
+                                               Chuckout
                                             {% endif %}
                                     </a>
                                 </li>

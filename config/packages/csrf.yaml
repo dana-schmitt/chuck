@@ -9,3 +9,11 @@ framework:
             - submit
             - authenticate
             - logout
+
+when@test:
+    framework:
+        csrf_protection:
+            # Stateless CSRF relies on client-side JS (assets/controllers/csrf_protection_controller.js)
+            # to mirror the token into a cookie on submit. The functional test client doesn't execute JS,
+            # so fall back to classic session-based CSRF tokens in the test environment.
+            stateless_token_ids: []

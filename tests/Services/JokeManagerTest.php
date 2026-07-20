@@ -3,6 +3,7 @@
 namespace App\Tests\Services;
 
 use App\Entity\Joke;
+use App\Exception\JokeFetchException;
 use App\Repository\JokeRepository;
 use App\Services\JokeFetcher;
 use App\Services\JokeManager;
@@ -48,7 +49,7 @@ class JokeManagerTest extends TestCase
     {
         $jokeFetcher = $this->createMock(JokeFetcher::class);
         $jokeFetcher->expects($this->once())->method('fetch')->willThrowException(
-            new \RuntimeException('Something went wrong!')
+            new JokeFetchException('Something went wrong!')
         );
 
         $jokeRepository = $this->createMock(JokeRepository::class);

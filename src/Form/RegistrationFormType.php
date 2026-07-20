@@ -21,8 +21,7 @@ class RegistrationFormType extends AbstractType
                 ->add('email', TextType::class, [
                     'label' => false,
                     'attr' => [
-                        'autocomplete' => 'email',                     
-                        'class' => 'bg-transparent block mt-10 mx-auto border-b-2 sm:w-4/5 md:w-2/5 h-20 text-lg outline-none',
+                        'autocomplete' => 'email',
                         'placeholder' => 'Email'
                     ],
                 ])
@@ -31,8 +30,7 @@ class RegistrationFormType extends AbstractType
                     'label' => false,
                     'mapped' => false,
                     'attr' => [
-                        'autocomplete' => 'new-password',                     
-                        'class' => 'bg-transparent block mt-10 mx-auto border-b-2 sm:w-4/5 md:w-2/5 h-20 text-lg outline-none',
+                        'autocomplete' => 'new-password',
                         'placeholder' => 'Password'
                     ],
                     'constraints' => [

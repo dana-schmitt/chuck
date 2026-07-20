@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
 ###> doctrine/doctrine-bundle ###
   database:
@@ -11,6 +9,11 @@ services:
       MYSQL_USER: chuck
       MYSQL_PASSWORD: norris
       MYSQL_ROOT_PASSWORD: chuckme
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-uroot', '-pchuckme']
+      interval: 5s
+      timeout: 5s
+      retries: 10
     #ports:
     #  - '3306:3306'
     #expose:

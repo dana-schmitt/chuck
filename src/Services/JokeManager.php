@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Entity\Joke;
+use App\Exception\JokeFetchException;
 use App\Repository\JokeRepository;
 
 class JokeManager
@@ -26,7 +27,7 @@ class JokeManager
             }
 
             return $randomJoke;
-        } catch (\Throwable $throwable) {
+        } catch (JokeFetchException) {
             return $this->repository->findRandom()?->getJoke() ?? 'Chuck Norris is too busy to tell a joke right now.';
         }
     }
