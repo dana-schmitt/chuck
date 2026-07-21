@@ -34,8 +34,9 @@ A small Symfony app that serves Chuck Norris jokes to registered users.
 2. Start the webserver: `symfony server:start -d`
 3. (Optional) Watch and rebuild Tailwind CSS on change: `symfony console tailwind:build --watch`
 4. Open `http://localhost:8000` in your browser
-5. Log in with `chuck@local.wip` and password `Norris`
+5. Log in with `chuck@local.wip` and password `Norris` - this fixture user is an admin (see `/admin`)
 6. Emails (password reset, ...) are caught locally by [Mailpit](https://github.com/axllent/mailpit) (started as part of `docker compose up -d`) instead of being sent for real - view them at `http://localhost:8025`
+7. To grant another user admin access: `symfony console app:user:promote <email>`
 
 ### Tests
 

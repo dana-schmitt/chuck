@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin - Users{% endblock %}
+
+{% block body %}
+    <div class="w-4/5 m-auto min-h-full h-screen">
+
+        <div class="pb-8 border-b border-gray-200 text-center">
+            <h1 class="uppercase font-bold text-5xl text-gray-800 pt-36 pb-8">
+                Users
+            </h1>
+            <a href="{{ path('app_admin_dashboard') }}" class="text-indigo-500 underline text-sm">&larr; Back to admin</a>
+        </div>
+
+        {% for message in app.flashes('admin_error') %}
+            <p class="text-center text-red-500 pt-6">{{ message }}</p>
+        {% endfor %}
+
+        <table class="w-3/5 m-auto pt-12 pb-32 text-left">
+            <thead>
+                <tr class="border-b border-gray-300 text-xs uppercase text-gray-500">
+                    <th class="py-2">Email</th>
+                    <th class="py-2">Verified</th>
+                    <th class="py-2">Admin</th>
+                    <th class="py-2"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for adminUser in users %}
+                    <tr class="border-b border-gray-100">
+                        <td class="py-3 text-gray-700 font-light">{{ adminUser.email }}</td>
+                        <td class="py-3 text-gray-700 font-light">{{ adminUser.verified ? 'Yes' : 'No' }}</td>
+                        <td class="py-3 text-gray-700 font-light">{{ 'ROLE_ADMIN' in adminUser.roles ? 'Yes' : 'No' }}</td>
+                        <td class="py-3 text-right">
+                            <form method="post" action="{{ path('app_admin_user_toggle_admin', { id: adminUser.id }) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('toggle-admin' ~ adminUser.id) }}">
+                                <button type="submit" class="uppercase text-xs font-bold text-indigo-500 underline">
+                                    {{ 'ROLE_ADMIN' in adminUser.roles ? 'Revoke admin' : 'Make admin' }}
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

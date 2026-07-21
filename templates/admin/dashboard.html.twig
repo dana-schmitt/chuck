@@ -1,0 +1,34 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin{% endblock %}
+
+{% block body %}
+    <div class="w-4/5 m-auto min-h-full h-screen">
+
+        <div class="pb-8 border-b border-gray-200 text-center">
+            <h1 class="uppercase font-bold text-5xl text-gray-800 pt-36 pb-8">
+                Admin
+            </h1>
+        </div>
+
+        <div class="w-3/5 m-auto pt-12 flex justify-around text-center">
+            <div>
+                <p class="text-4xl font-bold text-gray-800">{{ userCount }}</p>
+                <p class="uppercase text-sm text-gray-500">Users</p>
+            </div>
+            <div>
+                <p class="text-4xl font-bold text-gray-800">{{ jokeCount }}</p>
+                <p class="uppercase text-sm text-gray-500">Jokes</p>
+            </div>
+            <div>
+                <p class="text-4xl font-bold text-gray-800">{{ likeCount }}</p>
+                <p class="uppercase text-sm text-gray-500">Likes</p>
+            </div>
+        </div>
+
+        <div class="text-center pt-16 pb-24 space-x-4">
+            <a href="{{ path('app_admin_users') }}" class="uppercase font-bold border border-gray-300 bg-yellow-400 text-gray-800 text-sm py-3 px-8 rounded transition transition-all shadow-xl hover:bg-indigo-400 hover:text-white">Manage users</a>
+            <a href="{{ path('app_admin_jokes') }}" class="uppercase font-bold border border-gray-300 bg-yellow-400 text-gray-800 text-sm py-3 px-8 rounded transition transition-all shadow-xl hover:bg-indigo-400 hover:text-white">Manage jokes</a>
+        </div>
+    </div>
+{% endblock %}
