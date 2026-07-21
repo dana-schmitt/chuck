@@ -35,6 +35,7 @@ A small Symfony app that serves Chuck Norris jokes to registered users.
 3. (Optional) Watch and rebuild Tailwind CSS on change: `symfony console tailwind:build --watch`
 4. Open `http://localhost:8000` in your browser
 5. Log in with `chuck@local.wip` and password `Norris`
+6. Emails (password reset, ...) are caught locally by [Mailpit](https://github.com/axllent/mailpit) (started as part of `docker compose up -d`) instead of being sent for real - view them at `http://localhost:8025`
 
 ### Tests
 
@@ -60,6 +61,8 @@ Real secrets (`APP_SECRET`, `DATABASE_URL`, `MYSQL_ROOT_PASSWORD`, ...) must nev
 
 `TRUSTED_PROXIES` should be set to the IP/CIDR of the reverse proxy in front of the app (see `config/packages/framework.yaml`).
 
+Emails (password reset) are sent via [Resend](https://resend.com/); set `MAILER_DSN=resend+api://RESEND_API_KEY@default` as a real env var / secret in prod. Dev/test default to `null://null` (or Mailpit in dev, see above) so nothing is ever sent from a non-prod environment by accident.
+
 ### Build & deploy
 
 The production image is built directly from source - there's no separate frontend build step to coordinate, since AssetMapper compiles Tailwind CSS and the Stimulus/importmap JS at image build time:
@@ -72,7 +75,7 @@ docker compose -f compose.prod.yaml build
 
 Typical deploy sequence:
 
-1. Provide `DATABASE_URL`, `APP_SECRET`, `MYSQL_ROOT_PASSWORD`, `MYSQL_PASSWORD`, `TRUSTED_PROXIES` as real environment variables (e.g. via an `.env.prod.local`-style file passed to `--env-file`, or your platform's secrets manager). These override the placeholder values baked into the image at build time, so nothing sensitive needs to be known at build time.
+1. Provide `DATABASE_URL`, `APP_SECRET`, `MAILER_DSN`, `MYSQL_ROOT_PASSWORD`, `MYSQL_PASSWORD`, `TRUSTED_PROXIES` as real environment variables (e.g. via an `.env.prod.local`-style file passed to `--env-file`, or your platform's secrets manager). These override the placeholder values baked into the image at build time, so nothing sensitive needs to be known at build time.
 2. `docker compose -f compose.prod.yaml up -d --build`
 3. Run migrations inside the running app container: `docker compose -f compose.prod.yaml exec app php bin/console doctrine:migrations:migrate --no-interaction`
 

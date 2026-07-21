@@ -12,6 +12,7 @@ services:
       APP_DEBUG: '0'
       DATABASE_URL: ${DATABASE_URL}
       APP_SECRET: ${APP_SECRET}
+      MAILER_DSN: ${MAILER_DSN}
       TRUSTED_PROXIES: ${TRUSTED_PROXIES:-}
     depends_on:
       database:

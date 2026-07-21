@@ -1,0 +1,31 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Reset your password{% endblock %}
+
+{% block body %}
+    <div class="w-4/5 m-auto text-center">
+        {% for flash_error in app.flashes('reset_password_error') %}
+            <div class="text-red-500 mt-6">{{ flash_error }}</div>
+        {% endfor %}
+
+        <div class="py-12">
+            <h1 class="uppercase font-bold text-5xl text-gray-800 pt-36 pb-8">
+                Forgot your password?
+            </h1>
+            <span class="font-light text-gray-500 italic">
+                Enter your email and we'll send you a reset link.
+            </span>
+
+            {% set field_class = 'bg-transparent block mt-10 mx-auto border-b-2 sm:w-4/5 md:w-2/5 h-20 text-lg outline-none' %}
+            {{ form_start(requestForm) }}
+                {{ form_row(requestForm.email, {'attr': {'class': field_class, 'placeholder': 'Email'}, 'label': false}) }}
+
+                <button type="submit"
+                        class="uppercase mt-16 font-bold border border-gray-300 bg-yellow-400 text-gray-800 text-lg py-4 px-12 rounded transition transition-all shadow-xl hover:border hover:border-gray-300 hover:bg-indigo-400 hover:text-zinc-100">
+                    Send reset link
+                </button>
+            {{ form_end(requestForm) }}
+        </div>
+        <a href="{{ path('app_login') }}" class="underline text-gray-800 py-4 px-12 transition transition-all hover:text-zinc-500">Back to login</a>
+    </div>
+{% endblock %}

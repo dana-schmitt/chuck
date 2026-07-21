@@ -1,0 +1,11 @@
+<p>Hi,</p>
+
+<p>Someone requested a password reset for your Chuckify account. If this was you, click the link below to choose a new password:</p>
+
+<p><a href="{{ url('app_reset_password', {token: resetToken.token}) }}">{{ url('app_reset_password', {token: resetToken.token}) }}</a></p>
+
+<p>This link will expire in {{ resetToken.expirationMessageKey|trans(resetToken.expirationMessageData, 'ResetPasswordBundle') }}.</p>
+
+<p>If you didn't request this, you can safely ignore this email.</p>
+
+<p>Cheers,<br>Chuckify</p>

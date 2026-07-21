@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Reset your password{% endblock %}
+
+{% block body %}
+    <div class="w-4/5 m-auto text-center">
+        <div class="py-12">
+            <h1 class="uppercase font-bold text-5xl text-gray-800 pt-36 pb-8">
+                Reset your password
+            </h1>
+
+            {% set field_class = 'bg-transparent block mt-10 mx-auto border-b-2 sm:w-4/5 md:w-2/5 h-20 text-lg outline-none' %}
+            {{ form_start(resetForm) }}
+                {{ form_row(resetForm.plainPassword.first, {'attr': {'class': field_class, 'placeholder': 'New password'}, 'label': false}) }}
+                {{ form_row(resetForm.plainPassword.second, {'attr': {'class': field_class, 'placeholder': 'Repeat password'}, 'label': false}) }}
+
+                <button type="submit"
+                        class="uppercase mt-16 font-bold border border-gray-300 bg-yellow-400 text-gray-800 text-lg py-4 px-12 rounded transition transition-all shadow-xl hover:border hover:border-gray-300 hover:bg-indigo-400 hover:text-zinc-100">
+                    Reset password
+                </button>
+            {{ form_end(resetForm) }}
+        </div>
+    </div>
+{% endblock %}
