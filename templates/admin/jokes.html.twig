@@ -16,16 +16,32 @@
             {% for joke in jokes %}
                 <li class="flex items-start justify-between gap-4 border-b border-gray-100 pb-4">
                     <p class="text-lg text-gray-700 font-light text-left">
+                        {% if not joke.approved %}
+                            <span class="inline-block uppercase text-xs font-bold text-yellow-700 bg-yellow-100 rounded-full px-2 py-0.5 mr-1">Pending</span>
+                        {% endif %}
                         {{ joke.joke }}
                         {% for jokeCategory in joke.categories %}
                             <span class="inline-block uppercase text-xs font-bold text-indigo-500 border border-indigo-300 rounded-full px-2 py-0.5 ml-1">{{ jokeCategory }}</span>
                         {% endfor %}
-                        <span class="block text-xs text-gray-400 pt-1">{{ likeCounts[joke.id] }} like{{ likeCounts[joke.id] == 1 ? '' : 's' }}</span>
+                        <span class="block text-xs text-gray-400 pt-1">
+                            {{ likeCounts[joke.id] }} like{{ likeCounts[joke.id] == 1 ? '' : 's' }}
+                            {% if joke.submittedBy %}
+                                &middot; submitted by {{ joke.submittedBy.email }}
+                            {% endif %}
+                        </span>
                     </p>
-                    <form method="post" action="{{ path('app_admin_joke_delete', { id: joke.id }) }}" onsubmit="return confirm('Delete this joke?');">
-                        <input type="hidden" name="_token" value="{{ csrf_token('delete-joke' ~ joke.id) }}">
-                        <button type="submit" class="shrink-0 uppercase text-xs font-bold text-red-500 underline">Delete</button>
-                    </form>
+                    <div class="shrink-0 flex gap-3">
+                        {% if not joke.approved %}
+                            <form method="post" action="{{ path('app_admin_joke_approve', { id: joke.id }) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('approve-joke' ~ joke.id) }}">
+                                <button type="submit" class="uppercase text-xs font-bold text-green-600 underline">Approve</button>
+                            </form>
+                        {% endif %}
+                        <form method="post" action="{{ path('app_admin_joke_delete', { id: joke.id }) }}" onsubmit="return confirm('Delete this joke?');">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete-joke' ~ joke.id) }}">
+                            <button type="submit" class="uppercase text-xs font-bold text-red-500 underline">Delete</button>
+                        </form>
+                    </div>
                 </li>
             {% endfor %}
         </ul>

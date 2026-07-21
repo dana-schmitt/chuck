@@ -30,12 +30,13 @@ class JokeRepository extends ServiceEntityRepository
 
     public function findRandom(): ?Joke
     {
-        $sql = 'SELECT j.id, j.joke FROM joke j ORDER BY RAND() LIMIT 1';
+        $sql = 'SELECT j.id, j.joke, j.categories FROM joke j WHERE j.approved = 1 ORDER BY RAND() LIMIT 1';
 
         $rsm = new ResultSetMapping();
         $rsm->addEntityResult(Joke::class, 'j');
         $rsm->addFieldResult('j', 'id', 'id');
         $rsm->addFieldResult('j', 'joke', 'joke');
+        $rsm->addFieldResult('j', 'categories', 'categories');
 
         return $this->getEntityManager()->createNativeQuery($sql, $rsm)->getOneOrNullResult();
     }
@@ -53,7 +54,8 @@ class JokeRepository extends ServiceEntityRepository
     {
         $rows = $this->createQueryBuilder('j')
             ->select('j AS joke', 'COUNT(l.id) AS likeCount')
-            ->join(JokeLike::class, 'l', 'WITH', 'l.joke = j')
+            ->join(JokeLike::class, 'l', 'ON', 'l.joke = j')
+            ->andWhere('j.approved = true')
             ->groupBy('j.id')
             ->orderBy('likeCount', 'DESC')
             ->setMaxResults($limit)
@@ -78,5 +80,17 @@ class JokeRepository extends ServiceEntityRepository
         }
 
         return $topLiked[array_rand($topLiked)]['joke'];
+    }
+
+    /**
+     * @return Joke[] most recently submitted first
+     */
+    public function findPendingSubmissions(): array
+    {
+        return $this->createQueryBuilder('j')
+            ->andWhere('j.approved = false')
+            ->orderBy('j.id', 'DESC')
+            ->getQuery()
+            ->getResult();
     }
 }

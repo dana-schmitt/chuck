@@ -4,6 +4,8 @@ namespace App\Controller;
 
 use App\Entity\Joke;
 use App\Entity\User;
+use App\Enum\JokeCategory;
+use App\Form\JokeSubmissionFormType;
 use App\Repository\JokeLikeRepository;
 use App\Repository\JokeRepository;
 use App\Services\JokeManager;
@@ -16,15 +18,6 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class JokeController extends AbstractController
 {
-    /**
-     * The fixed set of categories the Chuck Norris API supports (see /jokes/categories).
-     * Hardcoded to avoid an extra live API call on every page load just to list them.
-     */
-    private const AVAILABLE_CATEGORIES = [
-        'animal', 'career', 'celebrity', 'dev', 'explicit', 'fashion', 'food',
-        'history', 'money', 'movie', 'music', 'political', 'religion', 'science', 'sport', 'travel',
-    ];
-
     public function __construct(
         protected JokeManager $jokeManager,
     ) {
@@ -39,8 +32,7 @@ class JokeController extends AbstractController
     #[Route('/joke', name: 'app_joke')]
     public function joke(Request $request, JokeLikeRepository $jokeLikes): Response
     {
-        $category = $request->query->get('category');
-        $category = \in_array($category, self::AVAILABLE_CATEGORIES, true) ? $category : null;
+        $category = JokeCategory::tryFrom((string) $request->query->get('category'))?->value;
 
         $joke = $this->jokeManager->getJoke($category);
 
@@ -55,7 +47,7 @@ class JokeController extends AbstractController
             'liked' => $liked,
             'likeCount' => $likeCount,
             'category' => $category,
-            'availableCategories' => self::AVAILABLE_CATEGORIES,
+            'availableCategories' => array_map(static fn (JokeCategory $case) => $case->value, JokeCategory::cases()),
         ]);
     }
 
@@ -64,6 +56,11 @@ class JokeController extends AbstractController
     {
         /** @var User|null $user */
         $user = $this->getUser();
+
+        if (!$joke->isApproved() && $joke->getSubmittedBy() !== $user && !$this->isGranted('ROLE_ADMIN')) {
+            throw $this->createNotFoundException('This joke is still awaiting review.');
+        }
+
         $liked = $user !== null && $jokeLikes->isLikedBy($user, $joke);
 
         return $this->render('joke/index.html.twig', [
@@ -109,6 +106,32 @@ class JokeController extends AbstractController
     {
         return $this->render('joke/top.html.twig', [
             'topJokes' => $jokeRepository->findTopLiked(),
+        ]);
+    }
+
+    #[Route('/joke/submit', name: 'app_joke_submit')]
+    public function submit(Request $request, JokeRepository $jokeRepository): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        $joke = new Joke();
+        $form = $this->createForm(JokeSubmissionFormType::class, $joke);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $joke->setSubmittedBy($user);
+            $joke->setApproved(false);
+
+            $jokeRepository->addJoke($joke);
+
+            $this->addFlash('success', "Thanks! Your joke has been submitted and is awaiting review.");
+
+            return $this->redirectToRoute('app_joke_submit');
+        }
+
+        return $this->render('joke/submit.html.twig', [
+            'submissionForm' => $form,
         ]);
     }
 }

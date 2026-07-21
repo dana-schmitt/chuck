@@ -23,6 +23,17 @@ class Joke
     #[ORM\Column(type: Types::JSON)]
     private array $categories = [];
 
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?User $submittedBy = null;
+
+    /**
+     * Jokes fetched from the external API are auto-approved; user-submitted jokes
+     * default to false until an admin reviews them (see AdminController).
+     */
+    #[ORM\Column]
+    private bool $approved = true;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -54,6 +65,30 @@ class Joke
     public function setCategories(array $categories): static
     {
         $this->categories = $categories;
+
+        return $this;
+    }
+
+    public function getSubmittedBy(): ?User
+    {
+        return $this->submittedBy;
+    }
+
+    public function setSubmittedBy(?User $submittedBy): static
+    {
+        $this->submittedBy = $submittedBy;
+
+        return $this;
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->approved;
+    }
+
+    public function setApproved(bool $approved): static
+    {
+        $this->approved = $approved;
 
         return $this;
     }

@@ -23,6 +23,7 @@ class AdminController extends AbstractController
             'userCount' => \count($users->findAll()),
             'jokeCount' => \count($jokes->findAll()),
             'likeCount' => \count($jokeLikes->findAll()),
+            'pendingCount' => \count($jokes->findPendingSubmissions()),
         ]);
     }
 
@@ -90,6 +91,21 @@ class AdminController extends AbstractController
         $entityManager->flush();
 
         $this->addFlash('success', 'Joke deleted.');
+
+        return $this->redirectToRoute('app_admin_jokes');
+    }
+
+    #[Route('/jokes/{id}/approve', name: 'app_admin_joke_approve', methods: ['POST'])]
+    public function approveJoke(Joke $joke, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        if (!$this->isCsrfTokenValid('approve-joke'.$joke->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+
+        $joke->setApproved(true);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Joke approved.');
 
         return $this->redirectToRoute('app_admin_jokes');
     }

@@ -24,6 +24,10 @@
                 <p class="text-4xl font-bold text-gray-800">{{ likeCount }}</p>
                 <p class="uppercase text-sm text-gray-500">Likes</p>
             </div>
+            <div>
+                <p class="text-4xl font-bold {{ pendingCount > 0 ? 'text-red-500' : 'text-gray-800' }}">{{ pendingCount }}</p>
+                <p class="uppercase text-sm text-gray-500">Pending</p>
+            </div>
         </div>
 
         <div class="text-center pt-16 pb-24 space-x-4">
