@@ -16,6 +16,15 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class JokeController extends AbstractController
 {
+    /**
+     * The fixed set of categories the Chuck Norris API supports (see /jokes/categories).
+     * Hardcoded to avoid an extra live API call on every page load just to list them.
+     */
+    private const AVAILABLE_CATEGORIES = [
+        'animal', 'career', 'celebrity', 'dev', 'explicit', 'fashion', 'food',
+        'history', 'money', 'movie', 'music', 'political', 'religion', 'science', 'sport', 'travel',
+    ];
+
     public function __construct(
         protected JokeManager $jokeManager,
     ) {
@@ -28,9 +37,12 @@ class JokeController extends AbstractController
     }
 
     #[Route('/joke', name: 'app_joke')]
-    public function joke(JokeLikeRepository $jokeLikes): Response
+    public function joke(Request $request, JokeLikeRepository $jokeLikes): Response
     {
-        $joke = $this->jokeManager->getJoke();
+        $category = $request->query->get('category');
+        $category = \in_array($category, self::AVAILABLE_CATEGORIES, true) ? $category : null;
+
+        $joke = $this->jokeManager->getJoke($category);
 
         /** @var User|null $user */
         $user = $this->getUser();
@@ -42,6 +54,8 @@ class JokeController extends AbstractController
             'joke' => $joke,
             'liked' => $liked,
             'likeCount' => $likeCount,
+            'category' => $category,
+            'availableCategories' => self::AVAILABLE_CATEGORIES,
         ]);
     }
 
@@ -56,6 +70,7 @@ class JokeController extends AbstractController
             'joke' => $joke,
             'liked' => $liked,
             'likeCount' => $jokeLikes->countByJoke($joke),
+            'category' => null,
         ]);
     }
 

@@ -15,9 +15,11 @@ class JokeManager
     ) {
     }
 
-    public function getJoke(): ?Joke
+    public function getJoke(?string $category = null): ?Joke
     {
-        if ($this->popularJokeChance > 0 && mt_rand() / mt_getrandmax() < $this->popularJokeChance) {
+        // The "surface a popular joke instead" bias isn't category-aware, so skip it
+        // whenever the caller explicitly asked for a joke from a specific category.
+        if ($category === null && $this->popularJokeChance > 0 && mt_rand() / mt_getrandmax() < $this->popularJokeChance) {
             $popular = $this->repository->findRandomPopular();
             if ($popular !== null) {
                 return $popular;
@@ -25,12 +27,13 @@ class JokeManager
         }
 
         try {
-            $randomJoke = $this->jokeFetcher->fetch();
+            $fetched = $this->jokeFetcher->fetch($category);
 
-            $joke = $this->repository->findOneByText($randomJoke);
+            $joke = $this->repository->findOneByText($fetched->text);
             if ($joke === null) {
                 $joke = new Joke();
-                $joke->setJoke($randomJoke);
+                $joke->setJoke($fetched->text);
+                $joke->setCategories($fetched->categories);
                 $this->repository->addJoke($joke);
             }
 

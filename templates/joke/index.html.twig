@@ -24,6 +24,14 @@
             <div id="joke-container" class="w-3/5 m-auto pt-12 text-center">
                 <p class="text-xl text-gray-700 font-light">{{ joke.joke }}</p>
 
+                {% if joke.categories is not empty %}
+                    <div class="pt-4">
+                        {% for jokeCategory in joke.categories %}
+                            <a href="{{ path('app_joke', { category: jokeCategory }) }}" class="inline-block uppercase text-xs font-bold text-indigo-500 border border-indigo-300 rounded-full px-3 py-1 mx-1 hover:bg-indigo-50">{{ jokeCategory }}</a>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
                 {% if joke.id %}
                     <button
                             type="button"
@@ -60,9 +68,20 @@
             </div>
         {% endif %}
 
-        <div class="text-center pt-12 pb-24">
-            <a href="/joke" class="uppercase font-bold border border-gray-300 bg-yellow-400 text-gray-800 text-lg py-4 px-12 rounded transition transition-all shadow-xl hover:border hover:border-gray-300 hover:bg-indigo-400 hover:text-white">CHUCK ME</a>
+        <div class="text-center pt-12">
+            <a href="{{ path('app_joke', category ? { category: category } : {}) }}" class="uppercase font-bold border border-gray-300 bg-yellow-400 text-gray-800 text-lg py-4 px-12 rounded transition transition-all shadow-xl hover:border hover:border-gray-300 hover:bg-indigo-400 hover:text-white">CHUCK ME</a>
         </div>
+
+        {% if availableCategories is defined %}
+            <div class="text-center pt-8 pb-24">
+                <a href="{{ path('app_joke') }}" class="inline-block uppercase text-xs font-bold {{ category is null ? 'text-gray-800' : 'text-gray-400' }} border border-gray-300 rounded-full px-3 py-1 m-1 hover:bg-gray-100">All</a>
+                {% for availableCategory in availableCategories %}
+                    <a href="{{ path('app_joke', { category: availableCategory }) }}" class="inline-block uppercase text-xs font-bold {{ category == availableCategory ? 'text-gray-800' : 'text-gray-400' }} border border-gray-300 rounded-full px-3 py-1 m-1 hover:bg-gray-100">{{ availableCategory }}</a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="pb-24"></div>
+        {% endif %}
     {% endif %}
     </div>
 {% endblock %}

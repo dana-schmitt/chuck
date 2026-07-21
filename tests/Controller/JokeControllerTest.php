@@ -54,6 +54,33 @@ class JokeControllerTest extends WebTestCase
         self::assertSelectorTextContains('body', 'Test joke from mock API');
     }
 
+    public function testJokePageFiltersByCategoryAndDisplaysItAsATag(): void
+    {
+        $client = static::createClient();
+        $container = static::getContainer();
+
+        $container->set('chuck_norris_jokes.client', new MockHttpClient(function (string $method, string $url) {
+            self::assertStringContainsString('category=dev', $url);
+
+            return new MockResponse(json_encode(['value' => 'A dev joke from mock API', 'categories' => ['dev']]));
+        }));
+
+        $user = new User();
+        $user->setEmail(sprintf('category-viewer-%s@example.com', bin2hex(random_bytes(4))));
+        $user->setPassword($container->get(UserPasswordHasherInterface::class)->hashPassword($user, 'irrelevant-password'));
+
+        $entityManager = $container->get(EntityManagerInterface::class);
+        $entityManager->persist($user);
+        $entityManager->flush();
+
+        $client->loginUser($user);
+        $client->request('GET', '/joke?category=dev');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('body', 'A dev joke from mock API');
+        self::assertSelectorTextContains('body', 'dev');
+    }
+
     public function testJokeShowPageRedirectsAnonymousUsersToLogin(): void
     {
         $client = static::createClient();

@@ -14,13 +14,40 @@ class JokeFetcherTest extends TestCase
     public function testFetchReturnsJoke(): void
     {
         $client = new MockHttpClient([
+            new MockResponse(json_encode(['value' => 'This is a Joke!', 'categories' => ['dev']])),
+        ]);
+        $jokeFetcher = new JokeFetcher($client);
+
+        $result = $jokeFetcher->fetch();
+
+        self::assertEquals('This is a Joke!', $result->text);
+        self::assertEquals(['dev'], $result->categories);
+    }
+
+    public function testFetchDefaultsCategoriesToEmptyArrayWhenMissing(): void
+    {
+        $client = new MockHttpClient([
             new MockResponse(json_encode(['value' => 'This is a Joke!'])),
         ]);
         $jokeFetcher = new JokeFetcher($client);
 
         $result = $jokeFetcher->fetch();
 
-        self::assertEquals('This is a Joke!', $result);
+        self::assertEquals([], $result->categories);
+    }
+
+    public function testFetchPassesCategoryAsQueryParameter(): void
+    {
+        $client = new MockHttpClient(function (string $method, string $url) {
+            self::assertStringContainsString('category=dev', $url);
+
+            return new MockResponse(json_encode(['value' => 'A dev joke', 'categories' => ['dev']]));
+        });
+        $jokeFetcher = new JokeFetcher($client);
+
+        $result = $jokeFetcher->fetch('dev');
+
+        self::assertEquals('A dev joke', $result->text);
     }
 
     public function testFetchThrowsOnTransportFailure(): void

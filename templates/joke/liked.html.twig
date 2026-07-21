@@ -29,7 +29,12 @@
                             data-like-token-value="{{ csrf_token('like' ~ like.joke.id) }}"
                             data-like-liked-value="true"
                             data-like-remove-on-unlike-value="true">
-                        <p class="text-lg text-gray-700 font-light text-left">{{ like.joke.joke }}</p>
+                        <p class="text-lg text-gray-700 font-light text-left">
+                            {{ like.joke.joke }}
+                            {% for jokeCategory in like.joke.categories %}
+                                <span class="inline-block uppercase text-xs font-bold text-indigo-500 border border-indigo-300 rounded-full px-2 py-0.5 ml-1">{{ jokeCategory }}</span>
+                            {% endfor %}
+                        </p>
                         <button
                                 type="button"
                                 data-action="like#toggle"

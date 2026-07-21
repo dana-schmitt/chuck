@@ -14,16 +14,20 @@ class JokeFetcher
     ) {
     }
 
-    public function fetch(): string
+    public function fetch(?string $category = null): FetchedJoke
     {
         try {
-            $response = $this->httpClient->request('GET', '/jokes/random');
+            $response = $this->httpClient->request('GET', '/jokes/random', [
+                'query' => $category !== null ? ['category' => $category] : [],
+            ]);
 
             if ($response->getStatusCode() !== 200) {
                 throw new JokeFetchException(sprintf('Unexpected status code %d from the jokes API.', $response->getStatusCode()));
             }
 
-            return $response->toArray()['value'];
+            $data = $response->toArray();
+
+            return new FetchedJoke($data['value'], $data['categories'] ?? []);
         } catch (JokeFetchException $exception) {
             throw $exception;
         } catch (\Throwable $throwable) {

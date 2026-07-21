@@ -17,6 +17,12 @@ class Joke
     #[ORM\Column(type: Types::TEXT)]
     private ?string $joke = null;
 
+    /**
+     * @var string[]
+     */
+    #[ORM\Column(type: Types::JSON)]
+    private array $categories = [];
+
     public function getId(): ?int
     {
         return $this->id;
@@ -30,6 +36,24 @@ class Joke
     public function setJoke(string $joke): static
     {
         $this->joke = $joke;
+
+        return $this;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getCategories(): array
+    {
+        return $this->categories;
+    }
+
+    /**
+     * @param string[] $categories
+     */
+    public function setCategories(array $categories): static
+    {
+        $this->categories = $categories;
 
         return $this;
     }
