@@ -36,6 +36,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private bool $isVerified = false;
 
+    #[ORM\Column(length: 60, nullable: true)]
+    private ?string $displayName = null;
+
+    #[ORM\Column(length: 500, nullable: true)]
+    private ?string $avatarUrl = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -121,5 +127,40 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         // If you store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;
+    }
+
+    public function getDisplayName(): string
+    {
+        if ($this->displayName !== null && $this->displayName !== '') {
+            return $this->displayName;
+        }
+
+        return explode('@', (string) $this->email)[0];
+    }
+
+    public function setDisplayName(?string $displayName): static
+    {
+        $this->displayName = $displayName;
+
+        return $this;
+    }
+
+    public function getAvatarUrl(): string
+    {
+        if ($this->avatarUrl !== null && $this->avatarUrl !== '') {
+            return $this->avatarUrl;
+        }
+
+        // Falls back to Gravatar's "identicon" so everyone has an avatar without uploading one.
+        $hash = hash('sha256', strtolower(trim((string) $this->email)));
+
+        return "https://www.gravatar.com/avatar/{$hash}?d=identicon&s=80";
+    }
+
+    public function setAvatarUrl(?string $avatarUrl): static
+    {
+        $this->avatarUrl = $avatarUrl;
+
+        return $this;
     }
 }
