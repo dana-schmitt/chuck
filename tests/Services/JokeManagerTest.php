@@ -11,21 +11,21 @@ use PHPUnit\Framework\TestCase;
 
 class JokeManagerTest extends TestCase
 {
-    public function testGetExistingJoke(): void
+    public function testGetExistingJokeReturnsStoredEntity(): void
     {
+        $stored = (new Joke())->setJoke('This is a Joke!');
+
         $jokeFetcher = $this->createMock(JokeFetcher::class);
         $jokeFetcher->expects($this->once())->method('fetch')->willReturn('This is a Joke!');
 
         $jokeRepository = $this->createMock(JokeRepository::class);
-        $jokeRepository->expects($this->once())->method('jokeExists')->willReturn(true);
+        $jokeRepository->expects($this->once())->method('findOneByText')->with('This is a Joke!')->willReturn($stored);
         $jokeRepository->expects($this->never())->method('addJoke');
         $jokeRepository->expects($this->never())->method('findRandom');
 
         $manager = new JokeManager($jokeFetcher, $jokeRepository);
 
-        $result = $manager->getJoke();
-
-        $this->assertEquals('This is a Joke!', $result);
+        $this->assertSame($stored, $manager->getJoke());
     }
 
     public function testGetNonExistingJokeIsSaved(): void
@@ -34,7 +34,7 @@ class JokeManagerTest extends TestCase
         $jokeFetcher->expects($this->once())->method('fetch')->willReturn('This is a Joke!');
 
         $jokeRepository = $this->createMock(JokeRepository::class);
-        $jokeRepository->expects($this->once())->method('jokeExists')->willReturn(false);
+        $jokeRepository->expects($this->once())->method('findOneByText')->with('This is a Joke!')->willReturn(null);
         $jokeRepository->expects($this->once())->method('addJoke')->with((new Joke())->setJoke('This is a Joke!'));
         $jokeRepository->expects($this->never())->method('findRandom');
 
@@ -42,25 +42,26 @@ class JokeManagerTest extends TestCase
 
         $result = $manager->getJoke();
 
-        $this->assertEquals('This is a Joke!', $result);
+        $this->assertInstanceOf(Joke::class, $result);
+        $this->assertEquals('This is a Joke!', $result->getJoke());
     }
 
-    public function testGetJokeFromDatabase(): void
+    public function testGetJokeFromDatabaseOnFetchFailure(): void
     {
+        $fallback = (new Joke())->setJoke('This is a Joke!');
+
         $jokeFetcher = $this->createMock(JokeFetcher::class);
         $jokeFetcher->expects($this->once())->method('fetch')->willThrowException(
             new JokeFetchException('Something went wrong!')
         );
 
         $jokeRepository = $this->createMock(JokeRepository::class);
-        $jokeRepository->expects($this->never())->method('jokeExists');
+        $jokeRepository->expects($this->never())->method('findOneByText');
         $jokeRepository->expects($this->never())->method('addJoke');
-        $jokeRepository->expects($this->once())->method('findRandom')->willReturn((new Joke())->setJoke('This is a Joke!'));
+        $jokeRepository->expects($this->once())->method('findRandom')->willReturn($fallback);
 
         $manager = new JokeManager($jokeFetcher, $jokeRepository);
 
-        $result = $manager->getJoke();
-
-        $this->assertEquals('This is a Joke!', $result);
+        $this->assertSame($fallback, $manager->getJoke());
     }
 }

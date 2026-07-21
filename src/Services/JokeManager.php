@@ -14,21 +14,21 @@ class JokeManager
     ) {
     }
 
-    public function getJoke(): string
+    public function getJoke(): ?Joke
     {
         try {
             $randomJoke = $this->jokeFetcher->fetch();
 
-            $jokeExists = $this->repository->jokeExists($randomJoke);
-            if (!$jokeExists) {
+            $joke = $this->repository->findOneByText($randomJoke);
+            if ($joke === null) {
                 $joke = new Joke();
                 $joke->setJoke($randomJoke);
                 $this->repository->addJoke($joke);
             }
 
-            return $randomJoke;
+            return $joke;
         } catch (JokeFetchException) {
-            return $this->repository->findRandom()?->getJoke() ?? 'Chuck Norris is too busy to tell a joke right now.';
+            return $this->repository->findRandom();
         }
     }
 }

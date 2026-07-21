@@ -22,16 +22,9 @@ class JokeRepository extends ServiceEntityRepository
         parent::__construct($registry, Joke::class);
     }
 
-    public function jokeExists(string $joke): bool
+    public function findOneByText(string $joke): ?Joke
     {
-        $qb = $this->createQueryBuilder('j');
-        $qb
-            ->select($qb->expr()->count('j.id'))
-            ->where('j.joke = :joke')
-            ->setParameter('joke', $joke)
-        ;
-
-        return $qb->getQuery()->getSingleScalarResult() > 0;
+        return $this->findOneBy(['joke' => $joke]);
     }
 
     public function findRandom(): ?Joke
