@@ -78,6 +78,14 @@
                                             Submit
                                     </a>
                                 </li>
+                                <li class="mr-3">
+                                    <a
+                                            class="uppercase inline-block text-gray-100 font-bold no-underline hover:text-gray-200 hover:text-underline py-2 px-4"
+                                            href="{{ path('app_joke_search') }}"
+                                            data-action="nav-toggle#close">
+                                            Search
+                                    </a>
+                                </li>
                                 {% if is_granted('ROLE_ADMIN') %}
                                 <li class="mr-3">
                                     <a

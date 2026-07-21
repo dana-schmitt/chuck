@@ -134,4 +134,15 @@ class JokeController extends AbstractController
             'submissionForm' => $form,
         ]);
     }
+
+    #[Route('/search', name: 'app_joke_search')]
+    public function search(Request $request, JokeRepository $jokeRepository): Response
+    {
+        $query = trim((string) $request->query->get('q', ''));
+
+        return $this->render('joke/search.html.twig', [
+            'query' => $query,
+            'results' => $query !== '' ? $jokeRepository->search($query) : [],
+        ]);
+    }
 }

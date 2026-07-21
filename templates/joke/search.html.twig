@@ -1,0 +1,45 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Search jokes{% endblock %}
+
+{% block body %}
+    <div class="w-4/5 m-auto min-h-full h-screen">
+
+        <div class="pb-8 border-b border-gray-200 text-center">
+            <h1 class="uppercase font-bold text-5xl text-gray-800 pt-36 pb-8">
+                Search
+            </h1>
+
+            <form method="get" action="{{ path('app_joke_search') }}" class="pt-4">
+                <input
+                        type="search"
+                        name="q"
+                        value="{{ query }}"
+                        placeholder="Search jokes..."
+                        class="bg-transparent block mx-auto border-b-2 sm:w-4/5 md:w-2/5 h-16 text-lg outline-none text-center"
+                        autofocus
+                >
+            </form>
+        </div>
+
+        {% if query is empty %}
+            <p class="text-center text-gray-500 italic pt-16">Type something above to search.</p>
+        {% elseif results is empty %}
+            <p class="text-center text-gray-500 italic pt-16">No jokes found for "{{ query }}".</p>
+        {% else %}
+            <ul class="w-3/5 m-auto pt-12 pb-32 space-y-6">
+                {% for joke in results %}
+                    <li class="border-b border-gray-100 pb-4">
+                        <p class="text-lg text-gray-700 font-light text-left">
+                            {{ joke.joke }}
+                            {% for jokeCategory in joke.categories %}
+                                <span class="inline-block uppercase text-xs font-bold text-indigo-500 border border-indigo-300 rounded-full px-2 py-0.5 ml-1">{{ jokeCategory }}</span>
+                            {% endfor %}
+                        </p>
+                        <a href="{{ path('app_joke_show', { id: joke.id }) }}" class="text-indigo-500 underline text-sm">View joke &rarr;</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+{% endblock %}

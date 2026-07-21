@@ -93,4 +93,43 @@ class JokeRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Full-text search over approved jokes (see the joke_fulltext index).
+     *
+     * Uses BOOLEAN MODE rather than NATURAL LANGUAGE MODE: the latter silently drops any word
+     * that appears in over 50% of rows, which is a real risk on a small/young jokes table (a
+     * handful of common words would already cross that threshold) - boolean mode has no such
+     * cutoff. Each word is required (+) and prefix-matched (*), so "debug" also finds "debugger".
+     *
+     * @return Joke[] most relevant first
+     */
+    public function search(string $query, int $limit = 20): array
+    {
+        $terms = preg_split('/\s+/', trim($query), -1, PREG_SPLIT_NO_EMPTY);
+        if ($terms === []) {
+            return [];
+        }
+
+        $booleanQuery = implode(' ', array_map(
+            static fn (string $term) => '+'.preg_replace('/[+\-<>()~*"@]+/', '', $term).'*',
+            $terms,
+        ));
+
+        $sql = 'SELECT j.id, j.joke, j.categories
+                FROM joke j
+                WHERE j.approved = 1 AND MATCH(j.joke) AGAINST (:query IN BOOLEAN MODE)
+                ORDER BY MATCH(j.joke) AGAINST (:query IN BOOLEAN MODE) DESC
+                LIMIT '.$limit;
+
+        $rsm = new ResultSetMapping();
+        $rsm->addEntityResult(Joke::class, 'j');
+        $rsm->addFieldResult('j', 'id', 'id');
+        $rsm->addFieldResult('j', 'joke', 'joke');
+        $rsm->addFieldResult('j', 'categories', 'categories');
+
+        return $this->getEntityManager()->createNativeQuery($sql, $rsm)
+            ->setParameter('query', $booleanQuery)
+            ->getResult();
+    }
 }
