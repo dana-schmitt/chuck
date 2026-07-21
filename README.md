@@ -26,6 +26,7 @@ A small Symfony app that serves Chuck Norris jokes to registered users.
    1. `symfony console doctrine:database:create`
    2. `symfony console doctrine:migrations:migrate`
 5. If you want to set up a first user, run `symfony console doctrine:fixtures:load`
+6. Build the Tailwind CSS once: `symfony console tailwind:build` - required before the app can render at all (dev, test and prod), since the page templates reference the compiled output
 
 ### Run the application
 
@@ -41,7 +42,7 @@ A small Symfony app that serves Chuck Norris jokes to registered users.
 php bin/phpunit
 ```
 
-The test suite needs its own database (`joke_test` by default); create and migrate it once with:
+The test suite needs its own database (`joke_test` by default) and the Tailwind build from step 6 above; create and migrate the test database once with:
 
 ```
 APP_ENV=test symfony console doctrine:database:create
