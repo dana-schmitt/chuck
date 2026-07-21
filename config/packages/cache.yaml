@@ -15,5 +15,14 @@ framework:
         #app: cache.adapter.apcu
 
         # Namespaced pools use the above "app" backend by default
-        #pools:
-            #my.dedicated.cache: null
+        pools:
+            cache.joke_fetch: null
+
+when@test:
+    framework:
+        cache:
+            pools:
+                # Isolated per test (in-memory, cleared on every kernel boot) so one test's
+                # mocked API response can never leak into another via the joke-fetch cache.
+                cache.joke_fetch:
+                    adapter: cache.adapter.array
