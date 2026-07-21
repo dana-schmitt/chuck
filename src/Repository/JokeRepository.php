@@ -158,4 +158,31 @@ class JokeRepository extends ServiceEntityRepository
             ->setParameter('category', json_encode($category))
             ->getResult();
     }
+
+    /**
+     * @param int[] $excludeIds
+     */
+    public function findRandomExcluding(array $excludeIds = []): ?Joke
+    {
+        $where = 'j.approved = 1';
+        if ($excludeIds !== []) {
+            $placeholders = implode(',', array_fill(0, \count($excludeIds), '?'));
+            $where .= " AND j.id NOT IN ({$placeholders})";
+        }
+
+        $sql = "SELECT j.id, j.joke, j.categories FROM joke j WHERE {$where} ORDER BY RAND() LIMIT 1";
+
+        $rsm = new ResultSetMapping();
+        $rsm->addEntityResult(Joke::class, 'j');
+        $rsm->addFieldResult('j', 'id', 'id');
+        $rsm->addFieldResult('j', 'joke', 'joke');
+        $rsm->addFieldResult('j', 'categories', 'categories');
+
+        $query = $this->getEntityManager()->createNativeQuery($sql, $rsm);
+        foreach (array_values($excludeIds) as $i => $id) {
+            $query->setParameter($i + 1, $id);
+        }
+
+        return $query->getOneOrNullResult();
+    }
 }

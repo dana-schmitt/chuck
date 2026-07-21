@@ -9,6 +9,7 @@ use App\Form\JokeSubmissionFormType;
 use App\Repository\JokeLikeRepository;
 use App\Repository\JokeRepository;
 use App\Services\JokeManager;
+use App\Services\JokeOfTheDaySelector;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -106,6 +107,24 @@ class JokeController extends AbstractController
     {
         return $this->render('joke/top.html.twig', [
             'topJokes' => $jokeRepository->findTopLiked(),
+        ]);
+    }
+
+    #[Route('/joke-of-the-day', name: 'app_joke_of_the_day')]
+    public function jokeOfTheDay(JokeOfTheDaySelector $selector, JokeLikeRepository $jokeLikes): Response
+    {
+        $jokeOfTheDay = $selector->selectForToday();
+        $joke = $jokeOfTheDay->getJoke();
+
+        /** @var User|null $user */
+        $user = $this->getUser();
+        $liked = $user !== null && $jokeLikes->isLikedBy($user, $joke);
+
+        return $this->render('joke/joke_of_the_day.html.twig', [
+            'jokeOfTheDay' => $jokeOfTheDay,
+            'joke' => $joke,
+            'liked' => $liked,
+            'likeCount' => $jokeLikes->countByJoke($joke),
         ]);
     }
 

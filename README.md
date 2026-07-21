@@ -95,6 +95,16 @@ If you deploy from source instead of this prebuilt image (e.g. onto a plain PHP-
 
 `GET /health` checks database connectivity and returns `{"status":"ok"}` (200) or `{"status":"error", ...}` (503) - point your orchestrator's readiness/liveness probe at it.
 
+### Scheduled tasks
+
+The "Joke of the Day" (`/joke-of-the-day`) is picked once and then reused for the rest of the day; nothing selects it automatically. Run `app:joke-of-the-day:select` once a day (e.g. via the host's crontab or your orchestrator's scheduled-job feature) so the joke is ready before anyone visits the page:
+
+```
+0 6 * * * docker compose -f compose.prod.yaml exec -T app php bin/console app:joke-of-the-day:select
+```
+
+Running it more than once on the same day is harmless - it's idempotent and simply returns the joke already selected for today.
+
 ### CI
 
 `.github/workflows/ci.yaml` runs on every push/PR: `composer validate`, the full test suite against a MySQL service container, and `composer audit`.
