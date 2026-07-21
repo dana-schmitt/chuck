@@ -11,6 +11,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
 
 class JokeController extends AbstractController
@@ -44,8 +45,22 @@ class JokeController extends AbstractController
         ]);
     }
 
+    #[Route('/joke/{id}', name: 'app_joke_show', requirements: ['id' => '\d+'])]
+    public function show(Joke $joke, JokeLikeRepository $jokeLikes): Response
+    {
+        /** @var User|null $user */
+        $user = $this->getUser();
+        $liked = $user !== null && $jokeLikes->isLikedBy($user, $joke);
+
+        return $this->render('joke/index.html.twig', [
+            'joke' => $joke,
+            'liked' => $liked,
+            'likeCount' => $jokeLikes->countByJoke($joke),
+        ]);
+    }
+
     #[Route('/joke/{id}/like', name: 'app_joke_like', methods: ['POST'])]
-    public function toggleLike(Joke $joke, Request $request, JokeLikeRepository $jokeLikes): JsonResponse
+    public function toggleLike(Joke $joke, Request $request, JokeLikeRepository $jokeLikes, RateLimiterFactory $likeActionLimiter): JsonResponse
     {
         if (!$this->isCsrfTokenValid('like'.$joke->getId(), (string) $request->headers->get('X-CSRF-Token'))) {
             return $this->json(['error' => 'Invalid CSRF token.'], Response::HTTP_FORBIDDEN);
@@ -53,6 +68,11 @@ class JokeController extends AbstractController
 
         /** @var User $user */
         $user = $this->getUser();
+
+        if (!$likeActionLimiter->create((string) $user->getId())->consume(1)->isAccepted()) {
+            return $this->json(['error' => 'Too many requests. Please slow down.'], Response::HTTP_TOO_MANY_REQUESTS);
+        }
+
         $liked = $jokeLikes->toggle($user, $joke);
 
         return $this->json(['liked' => $liked, 'likeCount' => $jokeLikes->countByJoke($joke)]);

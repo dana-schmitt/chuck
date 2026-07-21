@@ -65,4 +65,18 @@ class JokeRepository extends ServiceEntityRepository
             $rows,
         );
     }
+
+    /**
+     * Picks one joke at random from the most-liked pool, for "Chuck me" to occasionally
+     * surface a crowd favorite instead of a purely random/freshly fetched joke.
+     */
+    public function findRandomPopular(int $poolSize = 20): ?Joke
+    {
+        $topLiked = $this->findTopLiked($poolSize);
+        if ($topLiked === []) {
+            return null;
+        }
+
+        return $topLiked[array_rand($topLiked)]['joke'];
+    }
 }

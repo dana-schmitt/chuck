@@ -23,7 +23,7 @@ class JokeManagerTest extends TestCase
         $jokeRepository->expects($this->never())->method('addJoke');
         $jokeRepository->expects($this->never())->method('findRandom');
 
-        $manager = new JokeManager($jokeFetcher, $jokeRepository);
+        $manager = new JokeManager($jokeFetcher, $jokeRepository, popularJokeChance: 0.0);
 
         $this->assertSame($stored, $manager->getJoke());
     }
@@ -38,7 +38,7 @@ class JokeManagerTest extends TestCase
         $jokeRepository->expects($this->once())->method('addJoke')->with((new Joke())->setJoke('This is a Joke!'));
         $jokeRepository->expects($this->never())->method('findRandom');
 
-        $manager = new JokeManager($jokeFetcher, $jokeRepository);
+        $manager = new JokeManager($jokeFetcher, $jokeRepository, popularJokeChance: 0.0);
 
         $result = $manager->getJoke();
 
@@ -60,8 +60,39 @@ class JokeManagerTest extends TestCase
         $jokeRepository->expects($this->never())->method('addJoke');
         $jokeRepository->expects($this->once())->method('findRandom')->willReturn($fallback);
 
-        $manager = new JokeManager($jokeFetcher, $jokeRepository);
+        $manager = new JokeManager($jokeFetcher, $jokeRepository, popularJokeChance: 0.0);
 
         $this->assertSame($fallback, $manager->getJoke());
+    }
+
+    public function testAlwaysReturnsAPopularJokeWhenChanceIsCertain(): void
+    {
+        $popular = (new Joke())->setJoke('A crowd favorite');
+
+        $jokeFetcher = $this->createMock(JokeFetcher::class);
+        $jokeFetcher->expects($this->never())->method('fetch');
+
+        $jokeRepository = $this->createMock(JokeRepository::class);
+        $jokeRepository->expects($this->once())->method('findRandomPopular')->willReturn($popular);
+
+        $manager = new JokeManager($jokeFetcher, $jokeRepository, popularJokeChance: 1.0);
+
+        $this->assertSame($popular, $manager->getJoke());
+    }
+
+    public function testFallsBackToFetchingWhenNoPopularJokeExistsYet(): void
+    {
+        $fetched = (new Joke())->setJoke('This is a Joke!');
+
+        $jokeFetcher = $this->createMock(JokeFetcher::class);
+        $jokeFetcher->expects($this->once())->method('fetch')->willReturn('This is a Joke!');
+
+        $jokeRepository = $this->createMock(JokeRepository::class);
+        $jokeRepository->expects($this->once())->method('findRandomPopular')->willReturn(null);
+        $jokeRepository->expects($this->once())->method('findOneByText')->with('This is a Joke!')->willReturn($fetched);
+
+        $manager = new JokeManager($jokeFetcher, $jokeRepository, popularJokeChance: 1.0);
+
+        $this->assertSame($fetched, $manager->getJoke());
     }
 }

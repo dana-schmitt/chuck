@@ -56,6 +56,27 @@ class LikeControllerTest extends WebTestCase
         self::assertNotNull($user->getId());
     }
 
+    public function testLikeTogglingIsRateLimited(): void
+    {
+        $client = static::createClient();
+        $this->mockJokeApi($client, 'A frequently-clicked Chuck fact');
+        $this->createAndLoginUser($client);
+
+        $crawler = $client->request('GET', '/joke');
+        $button = $crawler->filter('[data-like-url-value]');
+        $url = $button->attr('data-like-url-value');
+        $token = $button->attr('data-like-token-value');
+
+        // The limiter allows 30 requests per minute; exhaust it, then the next one must be rejected.
+        for ($i = 0; $i < 30; ++$i) {
+            $client->request('POST', $url, [], [], ['HTTP_X_CSRF_TOKEN' => $token]);
+            self::assertResponseIsSuccessful();
+        }
+
+        $client->request('POST', $url, [], [], ['HTTP_X_CSRF_TOKEN' => $token]);
+        self::assertResponseStatusCodeSame(429);
+    }
+
     public function testLikeIsRejectedWithoutValidCsrfToken(): void
     {
         $client = static::createClient();

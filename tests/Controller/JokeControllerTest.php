@@ -54,6 +54,50 @@ class JokeControllerTest extends WebTestCase
         self::assertSelectorTextContains('body', 'Test joke from mock API');
     }
 
+    public function testJokeShowPageRedirectsAnonymousUsersToLogin(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/joke/1');
+
+        self::assertResponseRedirects('/login');
+    }
+
+    public function testJokeShowPageDisplaysASpecificJokeWithShareButton(): void
+    {
+        $client = static::createClient();
+        $container = static::getContainer();
+        $entityManager = $container->get(EntityManagerInterface::class);
+        $passwordHasher = $container->get(UserPasswordHasherInterface::class);
+
+        $joke = (new Joke())->setJoke('A directly linkable Chuck fact');
+        $entityManager->persist($joke);
+        $entityManager->flush();
+
+        $client->loginUser($this->createUser($entityManager, $passwordHasher));
+        $crawler = $client->request('GET', '/joke/'.$joke->getId());
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('body', 'A directly linkable Chuck fact');
+
+        $shareButton = $crawler->filter('[data-share-url-value]');
+        self::assertCount(1, $shareButton, 'The joke page should render a share button.');
+        self::assertStringContainsString('/joke/'.$joke->getId(), (string) $shareButton->attr('data-share-url-value'));
+    }
+
+    public function testJokeShowPageReturns404ForUnknownJoke(): void
+    {
+        $client = static::createClient();
+        $container = static::getContainer();
+        $client->loginUser($this->createUser(
+            $container->get(EntityManagerInterface::class),
+            $container->get(UserPasswordHasherInterface::class),
+        ));
+
+        $client->request('GET', '/joke/999999');
+
+        self::assertResponseStatusCodeSame(404);
+    }
+
     public function testTopJokesPageRedirectsAnonymousUsersToLogin(): void
     {
         $client = static::createClient();

@@ -22,3 +22,13 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+when@test:
+    services:
+        # Functional tests assert on specific, freshly-fetched joke text; the "occasionally show
+        # a popular joke instead" behavior is covered separately (and deterministically) by
+        # JokeManagerTest, so keep it off here.
+        App\Services\JokeManager:
+            autowire: true
+            arguments:
+                $popularJokeChance: 0.0
