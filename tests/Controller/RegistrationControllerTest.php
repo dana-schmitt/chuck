@@ -28,6 +28,15 @@ class RegistrationControllerTest extends WebTestCase
 
         $user = static::getContainer()->get(UserRepository::class)->findOneBy(['email' => $email]);
         self::assertNotNull($user);
+        self::assertFalse($user->isVerified());
+
+        // Mailer assertions read the profiler data of the most recent request, so check
+        // these before following the redirect (which would overwrite that profile data).
+        self::assertEmailCount(1);
+        $confirmationEmail = self::getMailerMessage();
+        self::assertNotNull($confirmationEmail);
+        self::assertEmailAddressContains($confirmationEmail, 'To', $email);
+        self::assertStringContainsString('/verify/email', (string) $confirmationEmail->getHtmlBody());
 
         // The user was authenticated as part of registration, so following the
         // redirect must land on /joke rather than bouncing back to /login.

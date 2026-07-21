@@ -4,11 +4,14 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Form\RegistrationFormType;
+use App\Security\EmailVerifier;
 use App\Security\LoginFormAuthenticator;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mime\Address;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Authentication\UserAuthenticatorInterface;
@@ -22,6 +25,7 @@ class RegistrationController extends AbstractController
         EntityManagerInterface $entityManager,
         UserAuthenticatorInterface $userAuthenticator,
         LoginFormAuthenticator $authenticator,
+        EmailVerifier $emailVerifier,
     ): Response {
         $user = new User();
         $form = $this->createForm(RegistrationFormType::class, $user);
@@ -39,7 +43,12 @@ class RegistrationController extends AbstractController
             $entityManager->persist($user);
             $entityManager->flush();
 
-            // do anything else you need here, like send an email
+            $emailVerifier->sendEmailConfirmation('app_verify_email', $user, (new TemplatedEmail())
+                ->from(new Address('noreply@chuckify.app', 'Chuckify'))
+                ->to((string) $user->getEmail())
+                ->subject('Please confirm your email')
+                ->htmlTemplate('registration/confirmation_email.html.twig')
+            );
 
             return $userAuthenticator->authenticateUser($user, $authenticator, $request);
         }

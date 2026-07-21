@@ -1,0 +1,11 @@
+<p>Hi,</p>
+
+<p>Thanks for signing up for Chuckify! Please confirm your email address by clicking the link below:</p>
+
+<p><a href="{{ signedUrl }}">{{ signedUrl }}</a></p>
+
+<p>This link will expire in {{ expiresAtMessageKey|trans(expiresAtMessageData, 'VerifyEmailBundle') }}.</p>
+
+<p>If you didn't create an account, you can safely ignore this email.</p>
+
+<p>Cheers,<br>Chuckify</p>

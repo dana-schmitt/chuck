@@ -61,7 +61,7 @@ Real secrets (`APP_SECRET`, `DATABASE_URL`, `MYSQL_ROOT_PASSWORD`, ...) must nev
 
 `TRUSTED_PROXIES` should be set to the IP/CIDR of the reverse proxy in front of the app (see `config/packages/framework.yaml`).
 
-Emails (password reset) are sent via [Resend](https://resend.com/); set `MAILER_DSN=resend+api://RESEND_API_KEY@default` as a real env var / secret in prod. Dev/test default to `null://null` (or Mailpit in dev, see above) so nothing is ever sent from a non-prod environment by accident.
+Emails (password reset, registration confirmation) are sent via [Resend](https://resend.com/); set `MAILER_DSN=resend+api://RESEND_API_KEY@default` as a real env var / secret in prod. Dev/test default to `null://null` (or Mailpit in dev, see above) so nothing is ever sent from a non-prod environment by accident.
 
 ### Build & deploy
 

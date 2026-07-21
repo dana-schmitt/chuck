@@ -87,6 +87,20 @@
                 </header>
             {% endblock %}
 
+            {% for message in app.flashes('success') %}
+                <div class="w-4/5 md:w-2/5 m-auto text-center pt-24 text-green-600 font-light">{{ message }}</div>
+            {% endfor %}
+            {% for message in app.flashes('verify_email_error') %}
+                <div class="w-4/5 md:w-2/5 m-auto text-center pt-24 text-red-500 font-light">{{ message }}</div>
+            {% endfor %}
+
+            {% if app.user and not app.user.isVerified %}
+                <div class="w-full bg-yellow-100 text-center py-3 text-sm text-gray-800 mt-20">
+                    Please verify your email address.
+                    <a href="{{ path('app_verify_email_resend') }}" class="underline font-bold">Resend verification email</a>
+                </div>
+            {% endif %}
+
             {% block body %}{% endblock %}
 
             {% block footer %}
