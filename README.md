@@ -51,6 +51,15 @@ APP_ENV=test symfony console doctrine:database:create
 APP_ENV=test symfony console doctrine:migrations:migrate --no-interaction
 ```
 
+## API
+
+A read-only JSON API is available behind the same session auth as the rest of the app (log in via the browser first):
+
+- `GET /api/jokes?category=&limit=` - list approved jokes, newest first
+- `GET /api/jokes/{id}` - a single approved joke
+- `GET /api/jokes/random` - a random approved joke from the database (doesn't hit the external Chuck Norris API)
+- `GET /api/jokes/top?limit=` - the most-liked jokes
+
 ## Production
 
 ### Secrets

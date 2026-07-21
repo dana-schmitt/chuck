@@ -132,4 +132,30 @@ class JokeRepository extends ServiceEntityRepository
             ->setParameter('query', $booleanQuery)
             ->getResult();
     }
+
+    /**
+     * @return Joke[] most recent first, optionally filtered to a single category
+     */
+    public function findApproved(?string $category = null, int $limit = 20): array
+    {
+        if ($category === null) {
+            return $this->findBy(['approved' => true], ['id' => 'DESC'], $limit);
+        }
+
+        $sql = 'SELECT j.id, j.joke, j.categories
+                FROM joke j
+                WHERE j.approved = 1 AND JSON_CONTAINS(j.categories, :category)
+                ORDER BY j.id DESC
+                LIMIT '.$limit;
+
+        $rsm = new ResultSetMapping();
+        $rsm->addEntityResult(Joke::class, 'j');
+        $rsm->addFieldResult('j', 'id', 'id');
+        $rsm->addFieldResult('j', 'joke', 'joke');
+        $rsm->addFieldResult('j', 'categories', 'categories');
+
+        return $this->getEntityManager()->createNativeQuery($sql, $rsm)
+            ->setParameter('category', json_encode($category))
+            ->getResult();
+    }
 }
