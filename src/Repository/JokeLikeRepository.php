@@ -61,4 +61,14 @@ class JokeLikeRepository extends ServiceEntityRepository
 
         return true;
     }
+
+    public function countByJoke(Joke $joke): int
+    {
+        return (int) $this->createQueryBuilder('l')
+            ->select('COUNT(l.id)')
+            ->andWhere('l.joke = :joke')
+            ->setParameter('joke', $joke)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }

@@ -13,7 +13,7 @@ export default class extends Controller {
         removeOnUnlike: Boolean,
     };
 
-    static targets = ['icon'];
+    static targets = ['icon', 'count'];
 
     async toggle() {
         let response;
@@ -35,6 +35,10 @@ export default class extends Controller {
 
         const data = await response.json();
         this.likedValue = data.liked;
+
+        if (this.hasCountTarget && typeof data.likeCount === 'number') {
+            this.countTarget.textContent = data.likeCount;
+        }
 
         if (!this.likedValue && this.removeOnUnlikeValue) {
             this.element.remove();

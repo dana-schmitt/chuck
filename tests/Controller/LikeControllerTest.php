@@ -37,7 +37,7 @@ class LikeControllerTest extends WebTestCase
         // First click -> liked.
         $client->request('POST', $url, [], [], ['HTTP_X_CSRF_TOKEN' => $token]);
         self::assertResponseIsSuccessful();
-        self::assertSame(['liked' => true], json_decode($client->getResponse()->getContent(), true));
+        self::assertSame(['liked' => true, 'likeCount' => 1], json_decode($client->getResponse()->getContent(), true));
 
         // The liked joke shows up on the liked page.
         $likedCrawler = $client->request('GET', '/liked');
@@ -47,7 +47,7 @@ class LikeControllerTest extends WebTestCase
         // Second click on the same joke -> unliked.
         $client->request('POST', $url, [], [], ['HTTP_X_CSRF_TOKEN' => $token]);
         self::assertResponseIsSuccessful();
-        self::assertSame(['liked' => false], json_decode($client->getResponse()->getContent(), true));
+        self::assertSame(['liked' => false, 'likeCount' => 0], json_decode($client->getResponse()->getContent(), true));
 
         // Liked page is empty again.
         $client->request('GET', '/liked');

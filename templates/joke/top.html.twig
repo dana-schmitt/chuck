@@ -1,0 +1,40 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Top Jokes{% endblock %}
+
+{% block body %}
+    <div class="w-4/5 m-auto min-h-full h-screen">
+
+        <div class="pb-8 border-b border-gray-200 text-center">
+            <h1 class="uppercase font-bold text-5xl text-gray-800 pt-36 pb-8">
+                Top Jokes
+            </h1>
+            <span class="font-light text-gray-500 italic">
+                The most liked jokes, ranked
+            </span>
+        </div>
+
+        {% if topJokes is empty %}
+            <p class="text-center text-gray-500 italic pt-16">
+                No jokes have been liked yet.
+                <a href="{{ path('app_joke') }}" class="text-indigo-500 underline">Go like some.</a>
+            </p>
+        {% else %}
+            <ol class="w-3/5 m-auto pt-12 pb-32 space-y-6">
+                {% for entry in topJokes %}
+                    <li class="flex items-start justify-between gap-4 border-b border-gray-100 pb-4">
+                        <p class="text-lg text-gray-700 font-light text-left">
+                            <span class="text-gray-400 font-bold mr-2">#{{ loop.index }}</span>{{ entry.joke.joke }}
+                        </p>
+                        <span class="shrink-0 inline-flex items-center gap-1 text-sm font-bold uppercase text-red-500">
+                            <svg class="h-5 w-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                            </svg>
+                            {{ entry.likeCount }}
+                        </span>
+                    </li>
+                {% endfor %}
+            </ol>
+        {% endif %}
+    </div>
+{% endblock %}

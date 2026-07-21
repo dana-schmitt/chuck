@@ -37,6 +37,7 @@ security:
     access_control:
         - { path: ^/joke, roles: ROLE_USER }
         - { path: ^/liked, roles: ROLE_USER }
+        - { path: ^/top, roles: ROLE_USER }
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
 

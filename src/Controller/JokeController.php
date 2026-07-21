@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Joke;
 use App\Entity\User;
 use App\Repository\JokeLikeRepository;
+use App\Repository\JokeRepository;
 use App\Services\JokeManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -34,10 +35,12 @@ class JokeController extends AbstractController
         $user = $this->getUser();
         $liked = $joke !== null && $user !== null && $joke->getId() !== null
             && $jokeLikes->isLikedBy($user, $joke);
+        $likeCount = $joke !== null && $joke->getId() !== null ? $jokeLikes->countByJoke($joke) : 0;
 
         return $this->render('joke/index.html.twig', [
             'joke' => $joke,
             'liked' => $liked,
+            'likeCount' => $likeCount,
         ]);
     }
 
@@ -52,7 +55,7 @@ class JokeController extends AbstractController
         $user = $this->getUser();
         $liked = $jokeLikes->toggle($user, $joke);
 
-        return $this->json(['liked' => $liked]);
+        return $this->json(['liked' => $liked, 'likeCount' => $jokeLikes->countByJoke($joke)]);
     }
 
     #[Route('/liked', name: 'app_liked')]
@@ -63,6 +66,14 @@ class JokeController extends AbstractController
 
         return $this->render('joke/liked.html.twig', [
             'likes' => $jokeLikes->findRecentByUser($user),
+        ]);
+    }
+
+    #[Route('/top', name: 'app_top_jokes')]
+    public function topJokes(JokeRepository $jokeRepository): Response
+    {
+        return $this->render('joke/top.html.twig', [
+            'topJokes' => $jokeRepository->findTopLiked(),
         ]);
     }
 }

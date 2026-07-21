@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Joke;
+use App\Entity\JokeLike;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query\ResultSetMapping;
 use Doctrine\Persistence\ManagerRegistry;
@@ -43,5 +44,25 @@ class JokeRepository extends ServiceEntityRepository
     {
         $this->getEntityManager()->persist($joke);
         $this->getEntityManager()->flush();
+    }
+
+    /**
+     * @return array<int, array{joke: Joke, likeCount: int}> most-liked jokes first
+     */
+    public function findTopLiked(int $limit = 10): array
+    {
+        $rows = $this->createQueryBuilder('j')
+            ->select('j AS joke', 'COUNT(l.id) AS likeCount')
+            ->join(JokeLike::class, 'l', 'WITH', 'l.joke = j')
+            ->groupBy('j.id')
+            ->orderBy('likeCount', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+
+        return array_map(
+            static fn (array $row) => ['joke' => $row['joke'], 'likeCount' => (int) $row['likeCount']],
+            $rows,
+        );
     }
 }
