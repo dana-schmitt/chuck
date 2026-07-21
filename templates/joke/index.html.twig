@@ -68,6 +68,56 @@
             </div>
         {% endif %}
 
+        {% if comments is defined %}
+            <div class="w-3/5 m-auto pt-12 pb-12 text-left">
+                <h2 class="uppercase font-bold text-gray-800 text-sm tracking-wide mb-4">Comments</h2>
+
+                {% if comments is empty %}
+                    <p class="text-gray-500 italic text-sm">No comments yet. Be the first to say something.</p>
+                {% else %}
+                    <ul class="space-y-4 mb-8">
+                        {% for comment in comments %}
+                            <li class="border-b border-gray-100 pb-4">
+                                <p class="text-sm text-gray-700">{{ comment.body }}</p>
+                                <p class="text-xs text-gray-400 mt-1">
+                                    {{ comment.author.displayName }} &middot; {{ comment.createdAt|date('Y-m-d H:i') }}
+                                </p>
+
+                                <div
+                                        data-controller="reaction"
+                                        data-reaction-url-value="{{ path('app_comment_react', { jokeId: joke.id, id: comment.id }) }}"
+                                        data-reaction-token-value="{{ csrf_token('react-comment' ~ comment.id) }}"
+                                        class="mt-2 flex gap-2">
+                                    {% for emoji in reactionEmojis %}
+                                        <button
+                                                type="button"
+                                                data-reaction-target="button"
+                                                data-emoji="{{ emoji }}"
+                                                data-action="reaction#toggle"
+                                                class="px-2 py-1 rounded-full border text-sm {{ emoji in (userReactedEmojis[comment.id] ?? []) ? 'border-indigo-400 bg-indigo-50' : 'border-gray-200' }}">
+                                            {{ emoji }} <span data-reaction-count>{{ (reactionCounts[comment.id] ?? {})[emoji] ?? 0 }}</span>
+                                        </button>
+                                    {% endfor %}
+                                </div>
+
+                                {% if app.user and (app.user == comment.author or is_granted('ROLE_ADMIN')) %}
+                                    <form method="post" action="{{ path('app_comment_delete', { jokeId: joke.id, id: comment.id }) }}" class="mt-2">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete-comment' ~ comment.id) }}">
+                                        <button type="submit" class="text-xs text-gray-400 hover:text-red-500 underline">Delete</button>
+                                    </form>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                {{ form_start(commentForm, { action: path('app_comment_create', { id: joke.id }), attr: { class: 'space-y-2' } }) }}
+                    {{ form_row(commentForm.body, { attr: { class: 'w-full border border-gray-300 rounded p-2 text-sm' } }) }}
+                    <button type="submit" class="uppercase text-xs font-bold text-white bg-indigo-500 rounded px-4 py-2 hover:bg-indigo-600">Post comment</button>
+                {{ form_end(commentForm) }}
+            </div>
+        {% endif %}
+
         <div class="text-center pt-12">
             <a href="{{ path('app_joke', category ? { category: category } : {}) }}" class="uppercase font-bold border border-gray-300 bg-yellow-400 text-gray-800 text-lg py-4 px-12 rounded transition transition-all shadow-xl hover:border hover:border-gray-300 hover:bg-indigo-400 hover:text-white">CHUCK ME</a>
         </div>

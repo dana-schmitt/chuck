@@ -5,7 +5,11 @@ namespace App\Controller;
 use App\Entity\Joke;
 use App\Entity\User;
 use App\Enum\JokeCategory;
+use App\Enum\ReactionEmoji;
+use App\Form\CommentFormType;
 use App\Form\JokeSubmissionFormType;
+use App\Repository\CommentReactionRepository;
+use App\Repository\JokeCommentRepository;
 use App\Repository\JokeLikeRepository;
 use App\Repository\JokeRepository;
 use App\Services\JokeManager;
@@ -53,8 +57,12 @@ class JokeController extends AbstractController
     }
 
     #[Route('/joke/{id}', name: 'app_joke_show', requirements: ['id' => '\d+'])]
-    public function show(Joke $joke, JokeLikeRepository $jokeLikes): Response
-    {
+    public function show(
+        Joke $joke,
+        JokeLikeRepository $jokeLikes,
+        JokeCommentRepository $jokeComments,
+        CommentReactionRepository $commentReactions,
+    ): Response {
         /** @var User|null $user */
         $user = $this->getUser();
 
@@ -64,11 +72,26 @@ class JokeController extends AbstractController
 
         $liked = $user !== null && $jokeLikes->isLikedBy($user, $joke);
 
+        $comments = $jokeComments->findByJoke($joke);
+        $reactionCounts = [];
+        $userReactedEmojis = [];
+        foreach ($comments as $comment) {
+            $reactionCounts[$comment->getId()] = $commentReactions->countsByComment($comment);
+            $userReactedEmojis[$comment->getId()] = $user !== null
+                ? $commentReactions->findReactedEmojisByUser($user, $comment)
+                : [];
+        }
+
         return $this->render('joke/index.html.twig', [
             'joke' => $joke,
             'liked' => $liked,
             'likeCount' => $jokeLikes->countByJoke($joke),
             'category' => null,
+            'comments' => $comments,
+            'commentForm' => $this->createForm(CommentFormType::class)->createView(),
+            'reactionCounts' => $reactionCounts,
+            'userReactedEmojis' => $userReactedEmojis,
+            'reactionEmojis' => array_map(static fn (ReactionEmoji $case) => $case->value, ReactionEmoji::cases()),
         ]);
     }
 

@@ -4,3 +4,11 @@ framework:
             policy: 'sliding_window'
             limit: 30
             interval: '1 minute'
+        comment_action:
+            policy: 'sliding_window'
+            limit: 10
+            interval: '1 minute'
+        reaction_action:
+            policy: 'sliding_window'
+            limit: 30
+            interval: '1 minute'

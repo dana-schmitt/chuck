@@ -136,6 +136,9 @@
             {% for message in app.flashes('verify_email_error') %}
                 <div class="w-4/5 md:w-2/5 m-auto text-center pt-24 text-red-500 font-light">{{ message }}</div>
             {% endfor %}
+            {% for message in app.flashes('comment_error') %}
+                <div class="w-4/5 md:w-2/5 m-auto text-center pt-24 text-red-500 font-light">{{ message }}</div>
+            {% endfor %}
 
             {% if app.user and not app.user.isVerified %}
                 <div class="w-full bg-yellow-100 text-center py-3 text-sm text-gray-800 mt-20">
