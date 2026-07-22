@@ -1,10 +1,5 @@
 import './stimulus_bootstrap.js';
-/*
- * Welcome to your app's main JavaScript file!
- *
- * We recommend including the built version of this JavaScript file
- * (and its CSS file) in your base layout (base.html.twig).
- */
 
-// any CSS you import will output into a single css file (app.css in this case)
-import './styles/app.css';
+// styles/app.css is linked directly in base.html.twig's <head> instead of imported here -
+// AssetMapper's importmap() otherwise represents CSS imports as a data: URI "script", which a
+// strict Content-Security-Policy (no unsafe data: script-src) correctly refuses to execute.

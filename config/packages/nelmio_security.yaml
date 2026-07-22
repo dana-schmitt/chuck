@@ -34,6 +34,7 @@ nelmio_security:
             img-src:
                 - 'self'
                 - 'data:' # the inline SVG favicon in base.html.twig
+                - 'blob:' # avatar_dropzone_controller.js previews the dropped file via URL.createObjectURL()
                 - 'https://www.gravatar.com' # default avatar for users who haven't uploaded one
             connect-src:
                 - 'self'
