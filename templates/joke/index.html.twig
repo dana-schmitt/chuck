@@ -122,13 +122,13 @@
 
                 {{ form_start(commentForm, { action: path('app_comment_create', { id: joke.id }), attr: { class: 'space-y-2' } }) }}
                     {{ form_row(commentForm.body, { attr: { class: 'w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500' } }) }}
-                    <button type="submit" class="uppercase text-xs font-bold text-white bg-indigo-500 rounded px-4 py-2 hover:bg-indigo-600">Post comment</button>
+                    <button type="submit" class="uppercase text-xs font-bold text-white bg-indigo-500 rounded-full px-4 py-2 hover:bg-indigo-600">Post comment</button>
                 {{ form_end(commentForm) }}
             </div>
         {% endif %}
 
         <div class="text-center pt-12">
-            <a href="{{ path('app_joke', category ? { category: category } : {}) }}" class="uppercase font-bold border border-zinc-700 bg-yellow-400 text-zinc-900 text-lg py-4 px-12 rounded transition transition-all shadow-xl hover:border-zinc-600 hover:bg-indigo-400 hover:text-white">CHUCK ME</a>
+            <a href="{{ path('app_joke', category ? { category: category } : {}) }}" class="uppercase font-bold border border-zinc-700 bg-yellow-400 text-zinc-900 text-sm py-2.5 px-6 rounded-full transition-all shadow-xl hover:border-zinc-600 hover:bg-indigo-400 hover:text-white">CHUCK ME</a>
         </div>
 
         <div class="pb-24"></div>
