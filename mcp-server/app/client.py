@@ -21,6 +21,10 @@ class JokeApiClient:
             headers={"Authorization": f"Bearer {settings.api_token}"},
             timeout=settings.request_timeout_seconds,
             transport=transport,
+            # Never honor HTTP_PROXY/HTTPS_PROXY/NO_PROXY or the system trust store from the
+            # environment - this client only ever talks to one fixed, internal API_BASE_URL, so
+            # an ambient proxy setting has no legitimate reason to intercept it.
+            trust_env=False,
         )
 
     async def aclose(self) -> None:
