@@ -7,6 +7,8 @@ use App\Entity\Joke;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class JokeExplainTest extends WebTestCase
@@ -21,13 +23,27 @@ class JokeExplainTest extends WebTestCase
         self::assertResponseRedirects('/login');
     }
 
-    public function testExplainButtonAppearsOnlyOnTheJokeDetailPage(): void
+    public function testExplainButtonAppearsOnTheJokeDetailPage(): void
     {
         $client = static::createClient();
         $joke = $this->createJoke();
         $client->loginUser($this->createUser());
 
         $crawler = $client->request('GET', '/joke/'.$joke->getId());
+
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $crawler->filter('[data-explain-url-value]'));
+    }
+
+    public function testExplainButtonAlsoAppearsOnTheRandomJokePage(): void
+    {
+        $client = static::createClient();
+        static::getContainer()->set('chuck_norris_jokes.client', new MockHttpClient(
+            new MockResponse(json_encode(['value' => 'A randomly fetched explainable joke']))
+        ));
+        $client->loginUser($this->createUser());
+
+        $crawler = $client->request('GET', '/joke');
 
         self::assertResponseIsSuccessful();
         self::assertCount(1, $crawler->filter('[data-explain-url-value]'));

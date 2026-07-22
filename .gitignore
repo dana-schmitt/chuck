@@ -1,6 +1,10 @@
 .idea
 /.php-version
 
+# Personal, uncommitted docker compose overrides (e.g. switching ai-service to a real
+# OPENAI_API_KEY for local testing) - never meant to be shared or committed.
+/compose.local.yaml
+
 ###> symfony/framework-bundle ###
 /.env.local
 /.env.local.php
