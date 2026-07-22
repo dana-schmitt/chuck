@@ -5,7 +5,7 @@
         <meta name="color-scheme" content="dark">
         <title>{% block title %}Chuck Norris Jokes Hub{% endblock %}</title>
         <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text></svg>">
-        {% block importmap %}{{ importmap('app') }}{% endblock %}
+        {% block importmap %}{{ importmap('app', { nonce: csp_nonce('script') }) }}{% endblock %}
     </head>
     <body class="min-h-dvh bg-zinc-950 text-zinc-100 antialiased font-sans">
             {% block header %}

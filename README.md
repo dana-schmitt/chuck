@@ -73,6 +73,10 @@ Real secrets (`APP_SECRET`, `DATABASE_URL`, `MYSQL_ROOT_PASSWORD`, ...) must nev
 
 Emails (password reset, registration confirmation) are sent via [Resend](https://resend.com/); set `MAILER_DSN=resend+api://RESEND_API_KEY@default` as a real env var / secret in prod. Dev/test default to `null://null` (or Mailpit in dev, see above) so nothing is ever sent from a non-prod environment by accident.
 
+### Security headers
+
+`config/packages/nelmio_security.yaml` (via `nelmio/security-bundle`) sets a Content-Security-Policy (nonce-based, matching `csp_nonce()` passed to `importmap()` in `templates/base.html.twig`), `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, and a restrictive `Referrer-Policy` on every response. HSTS (`Strict-Transport-Security`) is only enabled `when@prod`, since it would otherwise force HTTPS on local dev.
+
 ### Build & deploy
 
 The production image is built directly from source - there's no separate frontend build step to coordinate, since AssetMapper compiles Tailwind CSS and the Stimulus/importmap JS at image build time:
@@ -106,6 +110,26 @@ The "Joke of the Day" (`/joke-of-the-day`) is picked once and then reused for th
 ```
 
 Running it more than once on the same day is harmless - it's idempotent and simply returns the joke already selected for today.
+
+### Backups
+
+`docker/backup/backup.sh` dumps the database to a gzip-compressed, timestamped file and prunes backups older than `BACKUP_RETENTION_DAYS` (default 14 days). It needs `MYSQL_ROOT_PASSWORD` in its environment (the same value used for `compose.prod.yaml`). Run it daily via cron on the deploy host, next to the repo checkout:
+
+```
+0 3 * * * MYSQL_ROOT_PASSWORD=... BACKUP_DIR=/var/backups/chuckify /path/to/chuckify/docker/backup/backup.sh >> /var/log/chuckify-backup.log 2>&1
+```
+
+To restore a backup:
+
+```
+gunzip -c chuckify-20260722-030000.sql.gz | docker compose -f compose.prod.yaml exec -T database mysql -uroot -p"$MYSQL_ROOT_PASSWORD" joke
+```
+
+This covers the database only - uploaded avatars live in the separate `avatar_uploads` volume (see above) and aren't included in these dumps.
+
+### Error tracking
+
+Set `SENTRY_DSN` as a real environment variable in prod to send uncaught exceptions and error-level log records to [Sentry](https://sentry.io/). Left unset (the default), the SDK simply doesn't send anything - dev and test are unaffected either way.
 
 ### CI
 

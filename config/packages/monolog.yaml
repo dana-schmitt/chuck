@@ -53,3 +53,7 @@ when@prod:
                 channels: [deprecation]
                 path: php://stderr
                 formatter: monolog.formatter.json
+            sentry:
+                type: service
+                id: Sentry\Monolog\LogToSentryIssueHandler
+                channels: ["!event", "!deprecation"]

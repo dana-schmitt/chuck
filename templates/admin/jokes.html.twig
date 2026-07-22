@@ -37,7 +37,12 @@
                                 <button type="submit" class="uppercase text-xs font-bold text-green-400 underline">Approve</button>
                             </form>
                         {% endif %}
-                        <form method="post" action="{{ path('app_admin_joke_delete', { id: joke.id }) }}" onsubmit="return confirm('Delete this joke?');">
+                        <form
+                                method="post"
+                                action="{{ path('app_admin_joke_delete', { id: joke.id }) }}"
+                                data-controller="confirm"
+                                data-confirm-message-value="Delete this joke?"
+                                data-action="submit->confirm#confirm">
                             <input type="hidden" name="_token" value="{{ csrf_token('delete-joke' ~ joke.id) }}">
                             <button type="submit" class="uppercase text-xs font-bold text-red-400 underline">Delete</button>
                         </form>

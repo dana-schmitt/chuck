@@ -23,6 +23,13 @@ services:
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 
+    # Forwards error-level+ Monolog records to Sentry as issues (no-ops if SENTRY_DSN is unset).
+    # Only handles plain log messages, not exceptions - those are already captured once by
+    # SentryBundle's own exception listener, so this avoids reporting the same exception twice.
+    Sentry\Monolog\LogToSentryIssueHandler:
+        arguments:
+            $level: !php/const Monolog\Level::Error
+
 when@test:
     services:
         # Functional tests assert on specific, freshly-fetched joke text; the "occasionally show

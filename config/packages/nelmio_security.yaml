@@ -1,0 +1,54 @@
+nelmio_security:
+    # prevents framing of the entire site
+    clickjacking:
+        paths:
+            '^/.*': DENY
+
+    # disables content type sniffing for script resources
+    content_type:
+        nosniff: true
+
+    # Send a full URL in the `Referer` header when performing a same-origin request,
+    # only send the origin of the document to secure destination (HTTPS->HTTPS),
+    # and send no header to a less secure destination (HTTPS->HTTP).
+    # If `strict-origin-when-cross-origin` is not supported, use `no-referrer` policy,
+    # no referrer information is sent along with requests.
+    referrer_policy:
+        enabled: true
+        policies:
+            - 'no-referrer'
+            - 'strict-origin-when-cross-origin'
+
+    csp:
+        enabled: true
+        enforce:
+            default-src:
+                - 'self'
+            script-src:
+                - 'self'
+                # Symfony AssetMapper's importmap() falls back to this CDN shim on browsers
+                # without native <script type="importmap"> support.
+                - 'https://ga.jspm.io'
+            style-src:
+                - 'self'
+            img-src:
+                - 'self'
+                - 'data:' # the inline SVG favicon in base.html.twig
+                - 'https://www.gravatar.com' # default avatar for users who haven't uploaded one
+            connect-src:
+                - 'self'
+            base-uri:
+                - 'self'
+            form-action:
+                - 'self'
+            frame-ancestors:
+                - 'none'
+            # AssetMapper's importmap() automatically applies the CSP nonce to its inline
+            # <script> tags via csp_nonce() - no manual nonce wiring needed here.
+
+when@prod:
+    nelmio_security:
+        forced_ssl:
+            hsts_max_age: 31536000
+            hsts_subdomains: true
+            hsts_preload: true
