@@ -1,7 +1,12 @@
 import { Controller } from '@hotwired/stimulus';
 
+/*
+ * Drives the mobile sidebar drawer: slides the menu in/out of view and
+ * shows/hides its backdrop. On large screens the sidebar is always visible
+ * (via lg: classes in the template) and this controller has no effect.
+ */
 export default class extends Controller {
-    static targets = ['menu', 'openIcon', 'closeIcon'];
+    static targets = ['menu', 'backdrop', 'openIcon', 'closeIcon'];
 
     connect() {
         this.boundCloseOnEscape = this.closeOnEscape.bind(this);
@@ -33,15 +38,20 @@ export default class extends Controller {
     }
 
     get open() {
-        return !this.menuTarget.classList.contains('hidden');
+        return !this.menuTarget.classList.contains('-translate-x-full');
     }
 
     set open(value) {
-        this.menuTarget.classList.toggle('hidden', !value);
-        this.openIconTarget.classList.toggle('hidden', value);
-        this.closeIconTarget.classList.toggle('hidden', !value);
-        this.element.classList.toggle('shadow-lg', value);
-        this.element.classList.toggle('bg-gray-400', value);
-        this.element.classList.toggle('bg-gray-600', !value);
+        this.menuTarget.classList.toggle('-translate-x-full', !value);
+
+        if (this.hasBackdropTarget) {
+            this.backdropTarget.classList.toggle('hidden', !value);
+        }
+        if (this.hasOpenIconTarget) {
+            this.openIconTarget.classList.toggle('hidden', value);
+        }
+        if (this.hasCloseIconTarget) {
+            this.closeIconTarget.classList.toggle('hidden', !value);
+        }
     }
 }

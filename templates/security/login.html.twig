@@ -16,7 +16,7 @@
 
     <div class="w-4/5 m-auto text-center">
         <div class="py-12 ">
-            <h1 class="uppercase font-bold text-5xl text-gray-800 pt-48 pb-8">
+            <h1 class="uppercase font-bold text-5xl text-zinc-100 pt-12 pb-8">
                 Let's Chuck In
             </h1>
 
@@ -25,7 +25,7 @@
                 value="{{ last_username }}"
                 name="email"
                 id="inputEmail"
-                class="bg-transparent block mt-10 mx-auto border-b-2 w-2/5 h-20 text-lg outline-none"
+                class="block mt-6 mx-auto w-full sm:w-96 rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-base text-zinc-100 placeholder-zinc-500 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                 placeholder="Email"
                 autocomplete="email"
                 required
@@ -36,7 +36,7 @@
                 type="password"
                 name="password"
                 id="inputPassword"
-                class="bg-transparent block mt-10 mx-auto border-b-2 w-2/5 h-20 text-lg outline-none"
+                class="block mt-4 mx-auto w-full sm:w-96 rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-base text-zinc-100 placeholder-zinc-500 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                 autocomplete="current-password"
                 placeholder="Password"
                 required
@@ -49,16 +49,16 @@
             >
 
             <button type="submit"
-class="uppercase mt-16 font-bold border border-gray-300 bg-yellow-400 text-gray-800 text-lg py-4 px-12 rounded transition transition-all shadow-xl hover:border hover:border-gray-300 hover:bg-indigo-400 hover:text-zinc-100">
+class="uppercase mt-10 font-bold border border-zinc-700 bg-yellow-400 text-zinc-900 text-lg py-4 px-12 rounded transition transition-all shadow-xl hover:border-zinc-600 hover:bg-indigo-400 hover:text-zinc-100">
                 Chuck in
             </button>
 
             <div class="pt-6">
-                <a href="{{ path('app_forgot_password_request') }}" class="underline text-gray-500 text-sm transition transition-all hover:text-zinc-700">Forgot your password?</a>
+                <a href="{{ path('app_forgot_password_request') }}" class="underline text-zinc-400 text-sm transition transition-all hover:text-zinc-200">Forgot your password?</a>
             </div>
         </form>
 
     </div>
-    <a href="/register" class="underline text-gray-800  py-4 px-12 transition transition-all hover:text-zinc-500">don't have an account? → Chuckify Yourself</a>
+    <a href="/register" class="underline text-zinc-300 py-4 px-12 transition transition-all hover:text-zinc-100">don't have an account? → Chuckify Yourself</a>
 </div>
 {% endblock %}

@@ -5,25 +5,25 @@
 {% block body %}
     <div class="w-4/5 m-auto text-center">
         {% for message in app.flashes('success') %}
-            <p class="text-center text-green-600 pt-6">{{ message }}</p>
+            <p class="text-center text-green-400 pt-6">{{ message }}</p>
         {% endfor %}
 
         <div class="py-12">
-            <img src="{{ app.user.avatarUrl }}" alt="" class="mx-auto h-24 w-24 rounded-full pt-36">
-            <h1 class="uppercase font-bold text-5xl text-gray-800 pb-8 pt-8">
+            <img src="{{ app.user.avatarUrl }}" alt="" class="mx-auto h-24 w-24 rounded-full pt-4">
+            <h1 class="uppercase font-bold text-5xl text-zinc-100 pb-8 pt-8">
                 {{ app.user.displayName }}
             </h1>
-            <span class="font-light text-gray-500 italic">
+            <span class="font-light text-zinc-400 italic">
                 {{ app.user.email }}
             </span>
 
-            {% set field_class = 'bg-transparent block mt-10 mx-auto border-b-2 sm:w-4/5 md:w-2/5 h-20 text-lg outline-none' %}
+            {% set field_class = 'block mt-4 mx-auto w-full sm:w-96 rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-base text-zinc-100 placeholder-zinc-500 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500' %}
             {{ form_start(profileForm) }}
                 {{ form_row(profileForm.displayName, {'attr': {'class': field_class}, 'label': false}) }}
                 {{ form_row(profileForm.avatarUrl, {'attr': {'class': field_class}, 'label': false}) }}
 
                 <button type="submit"
-                        class="uppercase mt-16 font-bold border border-gray-300 bg-yellow-400 text-gray-800 text-lg py-4 px-12 rounded transition transition-all shadow-xl hover:border hover:border-gray-300 hover:bg-indigo-400 hover:text-zinc-100">
+                        class="uppercase mt-10 font-bold border border-zinc-700 bg-yellow-400 text-zinc-900 text-lg py-4 px-12 rounded transition transition-all shadow-xl hover:border-zinc-600 hover:bg-indigo-400 hover:text-zinc-100">
                     Save
                 </button>
             {{ form_end(profileForm) }}

@@ -1,0 +1,16 @@
+{% use 'form_div_layout.html.twig' %}
+
+{% block form_label -%}
+    {% set label_attr = label_attr|merge({class: (label_attr.class|default('') ~ ' block text-left text-xs uppercase font-bold tracking-wide text-zinc-400 mb-1')|trim}) %}
+    {{- parent() -}}
+{%- endblock form_label %}
+
+{% block form_errors -%}
+    {%- if errors|length > 0 -%}
+        <ul class="mt-1 space-y-0.5 text-left text-sm text-red-400">
+            {%- for error in errors -%}
+                <li id="{{ id ~ '_error' ~ loop.index }}">{{ error.message }}</li>
+            {%- endfor -%}
+        </ul>
+    {%- endif -%}
+{%- endblock form_errors %}

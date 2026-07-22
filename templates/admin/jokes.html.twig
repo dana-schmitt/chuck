@@ -3,27 +3,27 @@
 {% block title %}Admin - Jokes{% endblock %}
 
 {% block body %}
-    <div class="w-4/5 m-auto min-h-full h-screen">
+    <div class="w-4/5 m-auto min-h-dvh">
 
-        <div class="pb-8 border-b border-gray-200 text-center">
-            <h1 class="uppercase font-bold text-5xl text-gray-800 pt-36 pb-8">
+        <div class="pb-8 border-b border-zinc-800 text-center">
+            <h1 class="uppercase font-bold text-5xl text-zinc-100 pt-8 pb-8">
                 Jokes
             </h1>
-            <a href="{{ path('app_admin_dashboard') }}" class="text-indigo-500 underline text-sm">&larr; Back to admin</a>
+            <a href="{{ path('app_admin_dashboard') }}" class="text-indigo-400 underline text-sm">&larr; Back to admin</a>
         </div>
 
         <ul class="w-3/5 m-auto pt-12 pb-32 space-y-6">
             {% for joke in jokes %}
-                <li class="flex items-start justify-between gap-4 border-b border-gray-100 pb-4">
-                    <p class="text-lg text-gray-700 font-light text-left">
+                <li class="flex items-start justify-between gap-4 border-b border-zinc-800 pb-4">
+                    <p class="text-lg text-zinc-300 font-light text-left">
                         {% if not joke.approved %}
-                            <span class="inline-block uppercase text-xs font-bold text-yellow-700 bg-yellow-100 rounded-full px-2 py-0.5 mr-1">Pending</span>
+                            <span class="inline-block uppercase text-xs font-bold text-yellow-300 bg-yellow-900/40 rounded-full px-2 py-0.5 mr-1">Pending</span>
                         {% endif %}
                         {{ joke.joke }}
                         {% for jokeCategory in joke.categories %}
-                            <span class="inline-block uppercase text-xs font-bold text-indigo-500 border border-indigo-300 rounded-full px-2 py-0.5 ml-1">{{ jokeCategory }}</span>
+                            <span class="inline-block uppercase text-xs font-bold text-indigo-400 border border-indigo-800 rounded-full px-2 py-0.5 ml-1">{{ jokeCategory }}</span>
                         {% endfor %}
-                        <span class="block text-xs text-gray-400 pt-1">
+                        <span class="block text-xs text-zinc-500 pt-1">
                             {{ likeCounts[joke.id] }} like{{ likeCounts[joke.id] == 1 ? '' : 's' }}
                             {% if joke.submittedBy %}
                                 &middot; submitted by {{ joke.submittedBy.email }}
@@ -34,12 +34,12 @@
                         {% if not joke.approved %}
                             <form method="post" action="{{ path('app_admin_joke_approve', { id: joke.id }) }}">
                                 <input type="hidden" name="_token" value="{{ csrf_token('approve-joke' ~ joke.id) }}">
-                                <button type="submit" class="uppercase text-xs font-bold text-green-600 underline">Approve</button>
+                                <button type="submit" class="uppercase text-xs font-bold text-green-400 underline">Approve</button>
                             </form>
                         {% endif %}
                         <form method="post" action="{{ path('app_admin_joke_delete', { id: joke.id }) }}" onsubmit="return confirm('Delete this joke?');">
                             <input type="hidden" name="_token" value="{{ csrf_token('delete-joke' ~ joke.id) }}">
-                            <button type="submit" class="uppercase text-xs font-bold text-red-500 underline">Delete</button>
+                            <button type="submit" class="uppercase text-xs font-bold text-red-400 underline">Delete</button>
                         </form>
                     </div>
                 </li>

@@ -3,36 +3,36 @@
 {% block title %}Your liked jokes{% endblock %}
 
 {% block body %}
-    <div class="w-4/5 m-auto min-h-full h-screen">
+    <div class="w-4/5 m-auto min-h-dvh">
 
-        <div class="pb-8 border-b border-gray-200 text-center">
-            <h1 class="uppercase font-bold text-5xl text-gray-800 pt-36 pb-8">
+        <div class="pb-8 border-b border-zinc-800 text-center">
+            <h1 class="uppercase font-bold text-5xl text-zinc-100 pt-8 pb-8">
                 Your Likes
             </h1>
-            <span class="font-light text-gray-500 italic">
+            <span class="font-light text-zinc-400 italic">
                 Jokes you chuckled at
             </span>
         </div>
 
         {% if likes is empty %}
-            <p class="text-center text-gray-500 italic pt-16">
+            <p class="text-center text-zinc-500 italic pt-16">
                 You haven't liked any jokes yet.
-                <a href="{{ path('app_joke') }}" class="text-indigo-500 underline">Go find some.</a>
+                <a href="{{ path('app_joke') }}" class="text-indigo-400 underline">Go find some.</a>
             </p>
         {% else %}
             <ul class="w-3/5 m-auto pt-12 pb-32 space-y-6">
                 {% for like in likes %}
                     <li
-                            class="flex items-start justify-between gap-4 border-b border-gray-100 pb-4"
+                            class="flex items-start justify-between gap-4 border-b border-zinc-800 pb-4"
                             data-controller="like"
                             data-like-url-value="{{ path('app_joke_like', { id: like.joke.id }) }}"
                             data-like-token-value="{{ csrf_token('like' ~ like.joke.id) }}"
                             data-like-liked-value="true"
                             data-like-remove-on-unlike-value="true">
-                        <p class="text-lg text-gray-700 font-light text-left">
+                        <p class="text-lg text-zinc-300 font-light text-left">
                             {{ like.joke.joke }}
                             {% for jokeCategory in like.joke.categories %}
-                                <span class="inline-block uppercase text-xs font-bold text-indigo-500 border border-indigo-300 rounded-full px-2 py-0.5 ml-1">{{ jokeCategory }}</span>
+                                <span class="inline-block uppercase text-xs font-bold text-indigo-400 border border-indigo-800 rounded-full px-2 py-0.5 ml-1">{{ jokeCategory }}</span>
                             {% endfor %}
                         </p>
                         <button
@@ -40,7 +40,7 @@
                                 data-action="like#toggle"
                                 data-like-target="icon"
                                 aria-label="Remove from likes"
-                                class="shrink-0 text-red-500 hover:text-gray-300 transition transition-all focus:outline-none">
+                                class="shrink-0 text-red-500 hover:text-zinc-500 transition transition-all focus:outline-none">
                             <svg class="h-7 w-7 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                             </svg>

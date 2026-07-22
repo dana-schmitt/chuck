@@ -3,30 +3,30 @@
 {% block title %}Top Jokes{% endblock %}
 
 {% block body %}
-    <div class="w-4/5 m-auto min-h-full h-screen">
+    <div class="w-4/5 m-auto min-h-dvh">
 
-        <div class="pb-8 border-b border-gray-200 text-center">
-            <h1 class="uppercase font-bold text-5xl text-gray-800 pt-36 pb-8">
+        <div class="pb-8 border-b border-zinc-800 text-center">
+            <h1 class="uppercase font-bold text-5xl text-zinc-100 pt-8 pb-8">
                 Top Jokes
             </h1>
-            <span class="font-light text-gray-500 italic">
+            <span class="font-light text-zinc-400 italic">
                 The most liked jokes, ranked
             </span>
         </div>
 
         {% if topJokes is empty %}
-            <p class="text-center text-gray-500 italic pt-16">
+            <p class="text-center text-zinc-500 italic pt-16">
                 No jokes have been liked yet.
-                <a href="{{ path('app_joke') }}" class="text-indigo-500 underline">Go like some.</a>
+                <a href="{{ path('app_joke') }}" class="text-indigo-400 underline">Go like some.</a>
             </p>
         {% else %}
             <ol class="w-3/5 m-auto pt-12 pb-32 space-y-6">
                 {% for entry in topJokes %}
-                    <li class="flex items-start justify-between gap-4 border-b border-gray-100 pb-4">
-                        <p class="text-lg text-gray-700 font-light text-left">
-                            <span class="text-gray-400 font-bold mr-2">#{{ loop.index }}</span>{{ entry.joke.joke }}
+                    <li class="flex items-start justify-between gap-4 border-b border-zinc-800 pb-4">
+                        <p class="text-lg text-zinc-300 font-light text-left">
+                            <span class="text-zinc-500 font-bold mr-2">#{{ loop.index }}</span>{{ entry.joke.joke }}
                             {% for jokeCategory in entry.joke.categories %}
-                                <span class="inline-block uppercase text-xs font-bold text-indigo-500 border border-indigo-300 rounded-full px-2 py-0.5 ml-1">{{ jokeCategory }}</span>
+                                <span class="inline-block uppercase text-xs font-bold text-indigo-400 border border-indigo-800 rounded-full px-2 py-0.5 ml-1">{{ jokeCategory }}</span>
                             {% endfor %}
                         </p>
                         <span class="shrink-0 inline-flex items-center gap-1 text-sm font-bold uppercase text-red-500">
