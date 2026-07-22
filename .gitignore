@@ -28,3 +28,11 @@
 
 /public/uploads/avatars/*
 !/public/uploads/avatars/.gitkeep
+
+###> ai-service (Python) ###
+/ai-service/.venv/
+/ai-service/.env
+/ai-service/.pytest_cache/
+/ai-service/**/__pycache__/
+/ai-service/*.egg-info/
+###< ai-service (Python) ###

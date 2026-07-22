@@ -1,6 +1,7 @@
 monolog:
     channels:
         - deprecation # Deprecations are logged in the dedicated "deprecation" channel when it exists
+        - ai # All AI provider calls (duration, model, errors) - see App\Ai\HttpAiServiceProvider
 
 when@dev:
     monolog:

@@ -15,9 +15,16 @@ services:
       MAILER_DSN: ${MAILER_DSN}
       TRUSTED_PROXIES: ${TRUSTED_PROXIES:-}
       SENTRY_DSN: ${SENTRY_DSN:-}
+      AI_PROVIDER: ${PHP_AI_PROVIDER:-http}
+      AI_SERVICE_URL: http://ai-service:8000
+      AI_SERVICE_SHARED_SECRET: ${AI_SERVICE_SHARED_SECRET}
     depends_on:
       database:
         condition: service_healthy
+      # Deliberately not "condition: service_healthy" for ai-service: it's a soft
+      # dependency (graceful degradation), so app must still start if it's unhealthy.
+      ai-service:
+        condition: service_started
     volumes:
       - avatar_uploads:/app/public/uploads/avatars
 
@@ -33,6 +40,25 @@ services:
       - app
     volumes:
       - avatar_uploads:/app/public/uploads/avatars
+
+  ai-service:
+    build:
+      context: ./ai-service
+    restart: always
+    environment:
+      # Distinct from the app service's PHP_AI_PROVIDER above (different service, different
+      # allowed values: openai|fake vs http|null) - kept as separate host-level variables on
+      # purpose so setting one can never accidentally feed an invalid value to the other.
+      AI_PROVIDER: ${AI_SERVICE_AI_PROVIDER:-openai}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      SHARED_SECRET: ${AI_SERVICE_SHARED_SECRET}
+    healthcheck:
+      test: ['CMD', 'python', '-c', "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # Internal only - never published to the host. Symfony reaches it via the Docker
+    # network's DNS name (see the app service's AI_SERVICE_URL above).
 
   database:
     image: mysql:8.0

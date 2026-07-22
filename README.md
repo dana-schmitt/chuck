@@ -7,6 +7,7 @@ A small Symfony app that serves Chuck Norris jokes to registered users.
 - PHP 8.4, Symfony 7.4 (LTS)
 - Doctrine ORM / MySQL 8
 - Symfony AssetMapper + Stimulus + Tailwind CSS (no Node/npm toolchain required)
+- `ai-service/`: Python 3.12, FastAPI - internal AI (embeddings/completions) service, see AI Features below
 
 ## Development
 
@@ -21,7 +22,7 @@ A small Symfony app that serves Chuck Norris jokes to registered users.
 
 1. Checkout from git and change files to your needs.
 2. Run `composer install`
-3. Run `docker compose up -d` (starts the MySQL container)
+3. Run `docker compose up -d` (starts MySQL, Mailpit, and `ai-service` in its fake-AI mode - see AI Features below)
 4. Prepare the database:
    1. `symfony console doctrine:database:create`
    2. `symfony console doctrine:migrations:migrate`
@@ -51,6 +52,16 @@ APP_ENV=test symfony console doctrine:database:create
 APP_ENV=test symfony console doctrine:migrations:migrate --no-interaction
 ```
 
+`ai-service` has its own, independent test suite:
+
+```
+cd ai-service
+python3 -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
+ruff check .
+pytest
+```
+
 ## API
 
 A read-only JSON API is available behind the same session auth as the rest of the app (log in via the browser first):
@@ -59,6 +70,26 @@ A read-only JSON API is available behind the same session auth as the rest of th
 - `GET /api/jokes/{id}` - a single approved joke
 - `GET /api/jokes/random` - a random approved joke from the database (doesn't hit the external Chuck Norris API)
 - `GET /api/jokes/top?limit=` - the most-liked jokes
+
+## AI Features
+
+### Foundation
+
+AI capability (embeddings, LLM completions) is provided by a separate internal service, `ai-service/` - a small FastAPI app (Python 3.12) that wraps the OpenAI API. Symfony never calls OpenAI directly; it only talks to `ai-service` over HTTP, so the OpenAI API key only ever needs to exist in one place.
+
+**Why a separate service instead of calling OpenAI from PHP directly:** it keeps AI-specific dependencies (an OpenAI SDK, JSON Schema validation, retry/batching logic) out of the PHP app entirely, and makes it trivial to run the whole app with AI features completely disabled (see below) without needing to fake an HTTP client inside PHP tests for every feature that touches AI.
+
+**Endpoints** (all except `/health` require an `X-Internal-Secret` header matching `SHARED_SECRET`):
+
+- `POST /embeddings` - `{"texts": [...]}` → `{"vectors": [[...], ...], "model": "..."}`, batched at 100 texts per OpenAI call
+- `POST /complete` - `{"system": ..., "user": ..., "response_schema": {...}?, "max_tokens": ...}` → `{"text": "..."}` (no schema) or `{"data": {...}}` (schema given - validated against it before the response is returned, on both the ai-service side and again on the PHP side)
+- `GET /health` - no auth required, used for the container healthcheck
+
+**Running without a real OpenAI key:** set `AI_PROVIDER=fake` on `ai-service` (the default - see `ai-service/.env.example`) to get deterministic canned responses instead of real API calls. This is what local dev and CI use.
+
+**PHP side:** `App\Ai\EmbeddingProviderInterface` / `App\Ai\CompletionProviderInterface`, backed by `HttpAiServiceProvider` (talks to `ai-service`) or `NullAiProvider` (always throws, for running with AI disabled entirely) - selected via the `AI_PROVIDER` env var (`http` default, or `null`). Every call is logged to the `ai` Monolog channel (duration, model, no user content or secrets). Every provider call can throw `App\Exception\AiServiceException`; callers are expected to catch it and fall back to non-AI behavior, the same way `JokeManager` already falls back to the database when the external jokes API is unreachable.
+
+Required env vars (PHP side, see `.env`): `AI_PROVIDER`, `AI_SERVICE_URL`, `AI_SERVICE_SHARED_SECRET` (must match `ai-service`'s own `SHARED_SECRET`).
 
 ## Production
 
@@ -73,6 +104,8 @@ Real secrets (`APP_SECRET`, `DATABASE_URL`, `MYSQL_ROOT_PASSWORD`, ...) must nev
 
 Emails (password reset, registration confirmation) are sent via [Resend](https://resend.com/); set `MAILER_DSN=resend+api://RESEND_API_KEY@default` as a real env var / secret in prod. Dev/test default to `null://null` (or Mailpit in dev, see above) so nothing is ever sent from a non-prod environment by accident.
 
+`OPENAI_API_KEY` and `AI_SERVICE_SHARED_SECRET` are only needed if you want real AI features (see AI Features above); leaving `OPENAI_API_KEY` unset with `AI_SERVICE_AI_PROVIDER=fake` runs `ai-service` in its deterministic fake mode instead. `PHP_AI_PROVIDER` and `AI_SERVICE_AI_PROVIDER` are deliberately separate variables (different services, different allowed values) - see the comments in `compose.prod.yaml`.
+
 ### Security headers
 
 `config/packages/nelmio_security.yaml` (via `nelmio/security-bundle`) sets a Content-Security-Policy (nonce-based, matching `csp_nonce()` passed to `importmap()` in `templates/base.html.twig`), `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, and a restrictive `Referrer-Policy` on every response. HSTS (`Strict-Transport-Security`) is only enabled `when@prod`, since it would otherwise force HTTPS on local dev.
@@ -85,13 +118,13 @@ The production image is built directly from source - there's no separate fronten
 docker compose -f compose.prod.yaml build
 ```
 
-`compose.prod.yaml` defines three services: `app` (PHP-FPM), `nginx` (serves static assets, proxies PHP requests to `app`) and `database`. It uses its own Compose project name (`chuckify-prod`) so it never collides with the local dev stack (`chuckify-dev`, from `compose.yaml`).
+`compose.prod.yaml` defines four services: `app` (PHP-FPM), `nginx` (serves static assets, proxies PHP requests to `app`), `ai-service` (internal only, see AI Features above) and `database`. It uses its own Compose project name (`chuckify-prod`) so it never collides with the local dev stack (`chuckify-dev`, from `compose.yaml`).
 
 Uploaded avatars are written to `/app/public/uploads/avatars` at runtime, which isn't part of the image (it's rebuilt on every deploy). Both `app` and `nginx` mount the same `avatar_uploads` named volume at that path - `app` so uploads persist across redeploys, `nginx` so it can actually see and serve files `app` wrote.
 
 Typical deploy sequence:
 
-1. Provide `DATABASE_URL`, `APP_SECRET`, `MAILER_DSN`, `MYSQL_ROOT_PASSWORD`, `MYSQL_PASSWORD`, `TRUSTED_PROXIES` as real environment variables (e.g. via an `.env.prod.local`-style file passed to `--env-file`, or your platform's secrets manager). These override the placeholder values baked into the image at build time, so nothing sensitive needs to be known at build time.
+1. Provide `DATABASE_URL`, `APP_SECRET`, `MAILER_DSN`, `MYSQL_ROOT_PASSWORD`, `MYSQL_PASSWORD`, `TRUSTED_PROXIES`, `AI_SERVICE_SHARED_SECRET` as real environment variables (e.g. via an `.env.prod.local`-style file passed to `--env-file`, or your platform's secrets manager). Add `OPENAI_API_KEY` too if you want real AI features rather than `ai-service`'s fake mode. These override the placeholder values baked into the image at build time, so nothing sensitive needs to be known at build time.
 2. `docker compose -f compose.prod.yaml up -d --build`
 3. Run migrations inside the running app container: `docker compose -f compose.prod.yaml exec app php bin/console doctrine:migrations:migrate --no-interaction`
 
@@ -133,4 +166,4 @@ Set `SENTRY_DSN` as a real environment variable in prod to send uncaught excepti
 
 ### CI
 
-`.github/workflows/ci.yaml` runs on every push/PR: `composer validate`, the full test suite against a MySQL service container, and `composer audit`.
+`.github/workflows/ci.yaml` runs two jobs on every push/PR: `test` (`composer validate`, the full PHP test suite against a MySQL service container, `composer audit`) and `ai-service-test` (`ruff check`, `pytest` for `ai-service/`, using its fake AI provider - no OpenAI key needed in CI).

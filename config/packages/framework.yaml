@@ -13,6 +13,11 @@ framework:
         scoped_clients:
             chuck_norris_jokes.client:
                 base_uri: 'https://api.chucknorris.io'
+            ai_service.client:
+                base_uri: '%env(AI_SERVICE_URL)%'
+                headers:
+                    X-Internal-Secret: '%env(AI_SERVICE_SHARED_SECRET)%'
+                timeout: 20
 
 when@prod:
     framework:

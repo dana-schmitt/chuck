@@ -15,3 +15,11 @@ services:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
 ###< symfony/mailer ###
+
+###> ai-service ###
+# Exposed on the host since PHP itself runs outside Docker in dev (symfony server:start) -
+# see AI_SERVICE_URL in .env. Not exposed at all in compose.prod.yaml.
+  ai-service:
+    ports:
+      - "8001:8000"
+###< ai-service ###

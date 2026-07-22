@@ -30,6 +30,20 @@ services:
         arguments:
             $level: !php/const Monolog\Level::Error
 
+    # AI_PROVIDER selects the provider implementation per config, not per code change - see
+    # App\Ai\AiProviderFactory. "http" (default) talks to the ai-service container; "null" makes
+    # every AI call throw immediately, exercised by every caller's fallback path (useful for local
+    # dev without running ai-service at all).
+    App\Ai\AiProviderFactory:
+        arguments:
+            $aiProvider: '%env(AI_PROVIDER)%'
+
+    App\Ai\EmbeddingProviderInterface:
+        factory: ['@App\Ai\AiProviderFactory', 'createEmbeddingProvider']
+
+    App\Ai\CompletionProviderInterface:
+        factory: ['@App\Ai\AiProviderFactory', 'createCompletionProvider']
+
 when@test:
     services:
         # Functional tests assert on specific, freshly-fetched joke text; the "occasionally show
