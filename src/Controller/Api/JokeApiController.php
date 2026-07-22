@@ -5,11 +5,15 @@ namespace App\Controller\Api;
 use App\Entity\Joke;
 use App\Repository\JokeLikeRepository;
 use App\Repository\JokeRepository;
+use App\Services\JokeOfTheDaySelector;
+use App\Services\SemanticJokeSearch;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 #[Route('/api/jokes')]
 class JokeApiController extends AbstractController
@@ -26,9 +30,9 @@ class JokeApiController extends AbstractController
     }
 
     #[Route('/random', name: 'app_api_jokes_random', methods: ['GET'])]
-    public function random(JokeRepository $jokeRepository, JokeLikeRepository $jokeLikes): JsonResponse
+    public function random(Request $request, JokeRepository $jokeRepository, JokeLikeRepository $jokeLikes): JsonResponse
     {
-        $joke = $jokeRepository->findRandom();
+        $joke = $jokeRepository->findRandom($request->query->get('category'));
         if ($joke === null) {
             return $this->json(['error' => 'No jokes available yet.'], Response::HTTP_NOT_FOUND);
         }
@@ -52,6 +56,47 @@ class JokeApiController extends AbstractController
         );
 
         return $this->json($entries);
+    }
+
+    #[Route('/of-the-day', name: 'app_api_jokes_of_the_day', methods: ['GET'])]
+    public function ofTheDay(JokeOfTheDaySelector $selector, JokeLikeRepository $jokeLikes): JsonResponse
+    {
+        $jokeOfTheDay = $selector->selectForToday();
+
+        return $this->json([
+            'date' => $jokeOfTheDay->getDate()->format('Y-m-d'),
+            ...$this->serialize($jokeOfTheDay->getJoke(), $jokeLikes),
+        ]);
+    }
+
+    #[Route('/search', name: 'app_api_jokes_search', methods: ['GET'])]
+    public function search(
+        Request $request,
+        SemanticJokeSearch $semanticJokeSearch,
+        JokeLikeRepository $jokeLikes,
+        RateLimiterFactory $apiSearchActionLimiter,
+    ): JsonResponse {
+        $query = trim((string) $request->query->get('q', ''));
+        if ($query === '') {
+            return $this->json(['error' => 'Query parameter "q" is required.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        /** @var UserInterface $user */
+        $user = $this->getUser();
+        if (!$apiSearchActionLimiter->create($user->getUserIdentifier())->consume(1)->isAccepted()) {
+            return $this->json(['error' => 'Too many requests. Please slow down.'], Response::HTTP_TOO_MANY_REQUESTS);
+        }
+
+        $limit = min(20, max(1, $request->query->getInt('limit', 5)));
+        $result = $semanticJokeSearch->search($query);
+
+        return $this->json([
+            'semantic' => $result->semantic,
+            'results' => array_map(
+                fn (Joke $joke) => $this->serialize($joke, $jokeLikes),
+                \array_slice($result->jokes, 0, $limit),
+            ),
+        ]);
     }
 
     #[Route('/{id}', name: 'app_api_jokes_show', requirements: ['id' => '\d+'], methods: ['GET'])]

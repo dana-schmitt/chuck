@@ -18,3 +18,10 @@ framework:
             policy: 'sliding_window'
             limit: 10
             interval: '1 minute'
+        api_search_action:
+            # GET /api/jokes/search runs semantic search (embedding + optional rerank), unlike
+            # the rest of the read-only JSON API which is plain DB reads - keyed per API token/
+            # user rather than IP, same as the other AI-backed limiters.
+            policy: 'sliding_window'
+            limit: 20
+            interval: '1 minute'

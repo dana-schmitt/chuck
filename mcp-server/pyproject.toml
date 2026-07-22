@@ -1,0 +1,32 @@
+[project]
+name = "chuckify-mcp-server"
+version = "0.1.0"
+description = "MCP server exposing the Chuckify joke API as tools for MCP-compatible AI clients."
+requires-python = ">=3.12"
+dependencies = [
+    "mcp>=1.2",
+    "httpx>=0.27",
+    "pydantic>=2.8",
+    "pydantic-settings>=2.4",
+]
+
+[project.scripts]
+chuckify-mcp-server = "app.server:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.6",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

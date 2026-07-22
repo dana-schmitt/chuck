@@ -4,6 +4,11 @@ security:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
     role_hierarchy:
         ROLE_ADMIN: ROLE_USER
+        # API tokens (ApiClientUser, e.g. the MCP server) get exactly the same access_control
+        # treatment as a logged-in browser user - nothing more. There is no ROLE_API-specific
+        # access_control rule anywhere; the read-only JSON API is the only thing that role can
+        # reach in practice, since access_control only grants ROLE_USER-gated paths.
+        ROLE_API: ROLE_USER
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
         # used to reload user from session & other features (e.g. switch_user)
@@ -11,14 +16,31 @@ security:
             entity:
                 class: App\Entity\User
                 property: email
+        # ApiClientUser isn't loaded through this one (ApiTokenAuthenticator supplies its own
+        # loader), but Symfony's ContextListener still needs a provider that supportsClass() it
+        # in order to persist an authenticated API-token request into the session at all.
+        api_client_user_provider:
+            id: App\Security\ApiClientUserProvider
+        main_provider:
+            chain:
+                providers: [app_user_provider, api_client_user_provider]
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
         main:
             lazy: true
-            provider: app_user_provider
-            custom_authenticator: App\Security\LoginFormAuthenticator
+            provider: main_provider
+            # Two authenticators on one firewall means Symfony can no longer infer which one
+            # is the entry point (what handles an anonymous request to a protected route) -
+            # LoginFormAuthenticator (redirect to /login) stays that entry point; the API
+            # token authenticator only ever activates for requests that already carry a
+            # Bearer header (see ApiTokenAuthenticator::supports()), so this doesn't change
+            # anonymous browser behavior at all.
+            entry_point: App\Security\LoginFormAuthenticator
+            custom_authenticators:
+                - App\Security\LoginFormAuthenticator
+                - App\Security\ApiTokenAuthenticator
             logout:
                 path: app_logout
                 # where to redirect after logout

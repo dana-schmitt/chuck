@@ -64,12 +64,18 @@ pytest
 
 ## API
 
-A read-only JSON API is available behind the same session auth as the rest of the app (log in via the browser first):
+A read-only JSON API is available under `/api/jokes`, reachable either behind the same session auth as the rest of the app (log in via the browser first) or with a bearer API token (see below) - useful for non-browser clients like the [MCP server](#mcp-server):
 
 - `GET /api/jokes?category=&limit=` - list approved jokes, newest first
 - `GET /api/jokes/{id}` - a single approved joke
-- `GET /api/jokes/random` - a random approved joke from the database (doesn't hit the external Chuck Norris API)
+- `GET /api/jokes/random?category=` - a random approved joke from the database (doesn't hit the external Chuck Norris API), optionally filtered by category
 - `GET /api/jokes/top?limit=` - the most-liked jokes
+- `GET /api/jokes/of-the-day` - today's featured joke (same selection as `/joke-of-the-day`)
+- `GET /api/jokes/search?q=&limit=` - semantic search (same engine as the browser's `/search`, with the same full-text fallback); rate limited at 20 requests/minute per caller since it can call the AI service
+
+### API tokens
+
+`php bin/console app:api-token:create <label>` creates a new read-only API token and prints the raw value once - it is stored only as a SHA-256 hash, so save it immediately (a lost token can't be recovered, only replaced with a new one). Send it as `Authorization: Bearer <token>` on any `/api/*` request. Tokens authenticate as `App\Security\ApiClientUser` (role `ROLE_API`, mapped to `ROLE_USER` via `role_hierarchy`) - they can reach exactly the same routes a logged-in browser user's session can, which in practice means only the read-only JSON API, since nothing else is exposed to `ROLE_USER` without also being under `/api`. This is entirely separate from browser login: session-based access to `/api` keeps working exactly as before.
 
 ## AI Features
 
@@ -119,6 +125,43 @@ On a joke's detail page (`/joke/{id}`), an "Explain this joke" button asks the L
 - **Rate limited** (`explain_action`, 10/minute per user) independently of the like/reaction limiters, since a cache miss is comparatively expensive.
 - **Prompt-injection hardening**: same `<<<JOKE>>>`-delimited, length-truncated (500 chars) pattern as moderation; the frontend renders the response via `textContent` only, never `innerHTML`, so nothing the model returns can inject markup.
 - On failure (AI service down, rate limited elsewhere, etc.) the endpoint returns a friendly JSON error and the rest of the page stays fully usable - explaining a joke is a nice-to-have, never a blocker.
+
+### MCP server
+
+`mcp-server/` is a small standalone [MCP](https://modelcontextprotocol.io) server (Python 3.12, the official `mcp` SDK) that exposes Chuckify's read-only JSON API as tools for any MCP-compatible AI client (Claude Desktop, Claude Code, ...). It's a thin client, not part of the AI *provider* stack above - it never talks to `ai-service` or OpenAI directly, only to Chuckify's own `/api/jokes/*` endpoints (using semantic search server-side when it's available, same as the browser).
+
+**Tools:**
+
+- `get_random_joke(category?)` - a random approved joke, optionally filtered by category
+- `search_jokes(query, limit?)` - semantic search (falls back to keyword search, same as `/search`)
+- `get_joke_of_the_day()` - today's featured joke
+- `get_top_jokes(limit?)` - the most-liked jokes
+
+**Setup:**
+
+1. Create a token from the Chuckify app directory: `php bin/console app:api-token:create mcp-server` (prints the raw token once - see [API tokens](#api-tokens) above).
+2. Install the server: `cd mcp-server && python3 -m venv .venv && source .venv/bin/activate && pip install -e .`
+3. Point an MCP client at it. Claude Desktop (`claude_desktop_config.json`) and Claude Code (`.mcp.json` or `claude mcp add`) both use the same shape:
+
+   ```json
+   {
+     "mcpServers": {
+       "chuckify": {
+         "command": "/absolute/path/to/chuckify/mcp-server/.venv/bin/chuckify-mcp-server",
+         "env": {
+           "API_BASE_URL": "http://127.0.0.1:8000",
+           "API_TOKEN": "<the token from step 1>"
+         }
+       }
+     }
+   }
+   ```
+
+**Example prompts**, once connected: *"Give me a random Chuck Norris joke about programming"*, *"Find Chuckify jokes about math"*, *"What's today's joke of the day on Chuckify?"*, *"What are the 5 most popular Chuck Norris jokes?"*
+
+**Local dev without a real ai-service:** the server doesn't need `ai-service` running at all - `search_jokes` just falls back to keyword search (the `semantic` field on its result says which one ran), exactly like the browser's `/search` page does.
+
+Same Python standards as `ai-service/`: type hints, pydantic models, `ruff check .`, `pytest` (HTTP calls mocked via `httpx.MockTransport` - no real API access needed to run the test suite).
 
 ## Production
 

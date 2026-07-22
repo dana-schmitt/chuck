@@ -28,9 +28,13 @@ class JokeRepository extends ServiceEntityRepository
         return $this->findOneBy(['joke' => $joke]);
     }
 
-    public function findRandom(): ?Joke
+    public function findRandom(?string $category = null): ?Joke
     {
-        $sql = 'SELECT j.id, j.joke, j.categories FROM joke j WHERE j.approved = 1 ORDER BY RAND() LIMIT 1';
+        $sql = 'SELECT j.id, j.joke, j.categories FROM joke j WHERE j.approved = 1';
+        if ($category !== null) {
+            $sql .= ' AND JSON_CONTAINS(j.categories, :category)';
+        }
+        $sql .= ' ORDER BY RAND() LIMIT 1';
 
         $rsm = new ResultSetMapping();
         $rsm->addEntityResult(Joke::class, 'j');
@@ -38,7 +42,12 @@ class JokeRepository extends ServiceEntityRepository
         $rsm->addFieldResult('j', 'joke', 'joke');
         $rsm->addFieldResult('j', 'categories', 'categories');
 
-        return $this->getEntityManager()->createNativeQuery($sql, $rsm)->getOneOrNullResult();
+        $query = $this->getEntityManager()->createNativeQuery($sql, $rsm);
+        if ($category !== null) {
+            $query->setParameter('category', json_encode($category));
+        }
+
+        return $query->getOneOrNullResult();
     }
 
     public function addJoke(Joke $joke): void

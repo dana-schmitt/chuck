@@ -36,3 +36,11 @@
 /ai-service/**/__pycache__/
 /ai-service/*.egg-info/
 ###< ai-service (Python) ###
+
+###> mcp-server (Python) ###
+/mcp-server/.venv/
+/mcp-server/.env
+/mcp-server/.pytest_cache/
+/mcp-server/**/__pycache__/
+/mcp-server/*.egg-info/
+###< mcp-server (Python) ###
