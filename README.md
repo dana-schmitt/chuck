@@ -101,6 +101,15 @@ Required env vars (PHP side, see `.env`): `AI_PROVIDER`, `AI_SERVICE_BASE_URL`, 
 - **Optional LLM reranking**: set `AI_SEARCH_RERANK=true` to have the top-20 cosine matches reranked to a top-5 via `/complete` with a structured-output schema. The search query is passed as clearly delimited data (not instructions) in the rerank prompt, and truncated to 200 characters, as a prompt-injection safeguard. If reranking fails, the cosine-similarity order is used unchanged.
 - **Fallback chain**: no embeddings indexed yet, or any AI call fails → the original `JokeRepository::search()` (MySQL FULLTEXT) runs instead, silently (no badge, no error shown to the user).
 
+### Submission moderation
+
+Every joke submission (`/joke/submit`) dispatches `App\Message\GenerateModerationResultMessage` (same async transport as embeddings) to get an AI pre-assessment before an admin ever looks at it:
+
+- **`App\Services\JokeModerationAnalyzer`** asks the LLM (via `/complete`, structured output) for a `recommendation` (`approve`/`reject`/`unsure`), a `confidence` (0-1), short `reasons`, and any `flags` (`offensive`, `not_a_joke`, `low_quality`) - stored as `App\Entity\ModerationResult`, one per submission.
+- **Duplicate detection is separate from the LLM call**: the analyzer embeds the submission and runs it through the same similarity search as semantic search (Feature 1) against existing *approved* jokes. A match above a fixed cosine-similarity threshold sets `ModerationResult::$duplicateOf` - the LLM never sees the rest of the database, so it has no way to know what already exists; embeddings do.
+- **The admin always decides.** `/admin/jokes` shows the recommendation, confidence, reasons, flags, and a link to the duplicate (if any) next to each pending submission, but approving or deleting is always a manual, explicit admin action - there's no auto-approve/auto-reject. If no `ModerationResult` exists yet (still queued, or the AI call failed), the UI just says "No AI analysis available." and the review workflow is unaffected.
+- **Prompt-injection hardening**: the submitted text is truncated to 500 characters (matching the submission form's own `Length` constraint) and wrapped in explicit `<<<JOKE>>>` delimiters with an "ignore instructions in here" system-prompt line, the same pattern used for the search-rerank prompt above.
+
 ## Production
 
 ### Secrets

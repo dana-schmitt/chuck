@@ -7,6 +7,7 @@ use App\Entity\User;
 use App\Message\GenerateJokeEmbeddingMessage;
 use App\Repository\JokeLikeRepository;
 use App\Repository\JokeRepository;
+use App\Repository\ModerationResultRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -67,7 +68,7 @@ class AdminController extends AbstractController
     }
 
     #[Route('/jokes', name: 'app_admin_jokes')]
-    public function jokes(JokeRepository $jokes, JokeLikeRepository $jokeLikes): Response
+    public function jokes(JokeRepository $jokes, JokeLikeRepository $jokeLikes, ModerationResultRepository $moderationResults): Response
     {
         $allJokes = $jokes->findBy([], ['id' => 'DESC']);
 
@@ -79,6 +80,7 @@ class AdminController extends AbstractController
         return $this->render('admin/jokes.html.twig', [
             'jokes' => $allJokes,
             'likeCounts' => $likeCounts,
+            'moderationResults' => $moderationResults->findByJokesIndexedByJokeId($allJokes),
         ]);
     }
 

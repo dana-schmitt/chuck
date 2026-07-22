@@ -3,7 +3,10 @@
 namespace App\Tests\Controller;
 
 use App\Entity\Joke;
+use App\Entity\ModerationResult;
 use App\Entity\User;
+use App\Enum\ModerationFlag;
+use App\Enum\ModerationRecommendation;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -93,6 +96,59 @@ class AdminControllerTest extends WebTestCase
 
         self::assertResponseRedirects('/admin/jokes');
         self::assertNull($entityManager->getRepository(Joke::class)->find($jokeId));
+    }
+
+    public function testPendingJokeWithoutAModerationResultShowsUnavailableMessage(): void
+    {
+        $client = static::createClient();
+        $client->loginUser($this->createUser(admin: true));
+
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $joke = (new Joke())->setJoke('A pending joke with no AI analysis yet')->setApproved(false);
+        $entityManager->persist($joke);
+        $entityManager->flush();
+
+        $crawler = $client->request('GET', '/admin/jokes');
+
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString(
+            'No AI analysis available.',
+            $crawler->filter('body')->text(),
+        );
+    }
+
+    public function testPendingJokeWithAModerationResultShowsTheRecommendationAndDuplicateLink(): void
+    {
+        $client = static::createClient();
+        $client->loginUser($this->createUser(admin: true));
+
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $existing = (new Joke())->setJoke('An existing approved joke')->setApproved(true);
+        $submitted = (new Joke())->setJoke('A suspiciously similar submission')->setApproved(false);
+        $entityManager->persist($existing);
+        $entityManager->persist($submitted);
+        $entityManager->flush();
+
+        $entityManager->persist(new ModerationResult(
+            $submitted,
+            ModerationRecommendation::Unsure,
+            0.42,
+            ['Sounds a lot like an existing joke.'],
+            [ModerationFlag::LowQuality],
+            $existing,
+        ));
+        $entityManager->flush();
+
+        $crawler = $client->request('GET', '/admin/jokes');
+
+        self::assertResponseIsSuccessful();
+        $text = $crawler->filter('body')->text();
+        self::assertStringContainsString('AI: unsure (42%)', $text);
+        self::assertStringContainsString('low quality', $text);
+        self::assertStringContainsString('Sounds a lot like an existing joke.', $text);
+
+        $duplicateLink = $crawler->filter(sprintf('a[href="/joke/%d"]', $existing->getId()));
+        self::assertCount(1, $duplicateLink);
     }
 
     private function createUser(bool $admin = false): User

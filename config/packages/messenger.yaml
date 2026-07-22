@@ -8,6 +8,7 @@ framework:
 
         routing:
             App\Message\GenerateJokeEmbeddingMessage: async
+            App\Message\GenerateModerationResultMessage: async
 
 when@test:
     framework:

@@ -29,6 +29,39 @@
                                 &middot; submitted by {{ joke.submittedBy.email }}
                             {% endif %}
                         </span>
+
+                        {% if not joke.approved %}
+                            <span class="block text-sm pt-3">
+                                {% set moderation = moderationResults[joke.id] ?? null %}
+                                {% if moderation is null %}
+                                    <span class="text-zinc-500 italic">No AI analysis available.</span>
+                                {% else %}
+                                    {% set recommendationColor = {
+                                        approve: 'text-green-300 bg-green-900/40 border-green-800',
+                                        reject: 'text-red-300 bg-red-900/40 border-red-800',
+                                        unsure: 'text-yellow-300 bg-yellow-900/40 border-yellow-800',
+                                    } %}
+                                    <span class="inline-block uppercase text-xs font-bold border rounded-full px-2 py-0.5 {{ recommendationColor[moderation.recommendation.value] }}">
+                                        AI: {{ moderation.recommendation.value }} ({{ (moderation.confidence * 100)|round }}%)
+                                    </span>
+                                    {% for flag in moderation.flags %}
+                                        <span class="inline-block uppercase text-xs font-bold text-zinc-400 border border-zinc-700 rounded-full px-2 py-0.5 ml-1">{{ flag.value|replace({'_': ' '}) }}</span>
+                                    {% endfor %}
+                                    {% if moderation.reasons is not empty %}
+                                        <ul class="text-xs text-zinc-500 list-disc list-inside pt-1">
+                                            {% for reason in moderation.reasons %}
+                                                <li>{{ reason }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                    {% if moderation.duplicateOf %}
+                                        <a href="{{ path('app_joke_show', { id: moderation.duplicateOf.id }) }}" class="block text-xs text-indigo-400 underline pt-1">
+                                            Possible duplicate of joke #{{ moderation.duplicateOf.id }}
+                                        </a>
+                                    {% endif %}
+                                {% endif %}
+                            </span>
+                        {% endif %}
                     </p>
                     <div class="shrink-0 flex gap-3">
                         {% if not joke.approved %}

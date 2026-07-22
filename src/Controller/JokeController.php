@@ -8,6 +8,7 @@ use App\Enum\JokeCategory;
 use App\Enum\ReactionEmoji;
 use App\Form\CommentFormType;
 use App\Form\JokeSubmissionFormType;
+use App\Message\GenerateModerationResultMessage;
 use App\Repository\CommentReactionRepository;
 use App\Repository\JokeCommentRepository;
 use App\Repository\JokeLikeRepository;
@@ -19,6 +20,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -153,7 +155,7 @@ class JokeController extends AbstractController
     }
 
     #[Route('/joke/submit', name: 'app_joke_submit')]
-    public function submit(Request $request, JokeRepository $jokeRepository): Response
+    public function submit(Request $request, JokeRepository $jokeRepository, MessageBusInterface $messageBus): Response
     {
         /** @var User $user */
         $user = $this->getUser();
@@ -167,6 +169,7 @@ class JokeController extends AbstractController
             $joke->setApproved(false);
 
             $jokeRepository->addJoke($joke);
+            $messageBus->dispatch(new GenerateModerationResultMessage($joke->getId()));
 
             $this->addFlash('success', "Thanks! Your joke has been submitted and is awaiting review.");
 

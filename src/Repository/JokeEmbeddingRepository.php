@@ -36,7 +36,7 @@ class JokeEmbeddingRepository extends ServiceEntityRepository
         $queryBuilder = $this->getEntityManager()->createQueryBuilder()
             ->select('j')
             ->from(Joke::class, 'j')
-            ->leftJoin(JokeEmbedding::class, 'e', 'WITH', 'e.joke = j')
+            ->leftJoin(JokeEmbedding::class, 'e', 'ON', 'e.joke = j')
             ->andWhere('j.approved = true')
             ->andWhere('e.id IS NULL')
             ->orderBy('j.id', 'ASC');
@@ -55,7 +55,7 @@ class JokeEmbeddingRepository extends ServiceEntityRepository
     {
         $rows = $this->createQueryBuilder('e')
             ->select('IDENTITY(e.joke) AS jokeId', 'e.vector AS vector')
-            ->innerJoin(Joke::class, 'j', 'WITH', 'j = e.joke')
+            ->innerJoin(Joke::class, 'j', 'ON', 'j = e.joke')
             ->andWhere('j.approved = true')
             ->getQuery()
             ->getResult();
