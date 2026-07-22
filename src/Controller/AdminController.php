@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Joke;
 use App\Entity\User;
+use App\Message\GenerateJokeEmbeddingMessage;
 use App\Repository\JokeLikeRepository;
 use App\Repository\JokeRepository;
 use App\Repository\UserRepository;
@@ -11,6 +12,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/admin')]
@@ -96,7 +98,7 @@ class AdminController extends AbstractController
     }
 
     #[Route('/jokes/{id}/approve', name: 'app_admin_joke_approve', methods: ['POST'])]
-    public function approveJoke(Joke $joke, Request $request, EntityManagerInterface $entityManager): Response
+    public function approveJoke(Joke $joke, Request $request, EntityManagerInterface $entityManager, MessageBusInterface $messageBus): Response
     {
         if (!$this->isCsrfTokenValid('approve-joke'.$joke->getId(), (string) $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Invalid CSRF token.');
@@ -104,6 +106,8 @@ class AdminController extends AbstractController
 
         $joke->setApproved(true);
         $entityManager->flush();
+
+        $messageBus->dispatch(new GenerateJokeEmbeddingMessage($joke->getId()));
 
         $this->addFlash('success', 'Joke approved.');
 

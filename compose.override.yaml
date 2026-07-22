@@ -18,7 +18,7 @@ services:
 
 ###> ai-service ###
 # Exposed on the host since PHP itself runs outside Docker in dev (symfony server:start) -
-# see AI_SERVICE_URL in .env. Not exposed at all in compose.prod.yaml.
+# see AI_SERVICE_BASE_URL in .env. Not exposed at all in compose.prod.yaml.
   ai-service:
     ports:
       - "8001:8000"

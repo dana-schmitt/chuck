@@ -89,7 +89,17 @@ AI capability (embeddings, LLM completions) is provided by a separate internal s
 
 **PHP side:** `App\Ai\EmbeddingProviderInterface` / `App\Ai\CompletionProviderInterface`, backed by `HttpAiServiceProvider` (talks to `ai-service`) or `NullAiProvider` (always throws, for running with AI disabled entirely) - selected via the `AI_PROVIDER` env var (`http` default, or `null`). Every call is logged to the `ai` Monolog channel (duration, model, no user content or secrets). Every provider call can throw `App\Exception\AiServiceException`; callers are expected to catch it and fall back to non-AI behavior, the same way `JokeManager` already falls back to the database when the external jokes API is unreachable.
 
-Required env vars (PHP side, see `.env`): `AI_PROVIDER`, `AI_SERVICE_URL`, `AI_SERVICE_SHARED_SECRET` (must match `ai-service`'s own `SHARED_SECRET`).
+Required env vars (PHP side, see `.env`): `AI_PROVIDER`, `AI_SERVICE_BASE_URL`, `AI_SERVICE_SHARED_SECRET` (must match `ai-service`'s own `SHARED_SECRET`).
+
+### Semantic search
+
+`/search` embeds the query and ranks approved jokes by cosine similarity against their stored embeddings (`App\Services\SemanticJokeSearch`), instead of (or rather: in addition to - see fallback below) the original full-text search. A small "semantisch" badge appears above the results whenever the AI path was actually used.
+
+- **Embeddings are generated asynchronously.** Saving a new joke (external API fetch) or approving a submitted one dispatches `App\Message\GenerateJokeEmbeddingMessage` onto Messenger's `async` transport (Doctrine-backed, see `config/packages/messenger.yaml`) so the request never waits on `ai-service`. A dedicated `messenger-worker` container processes it (`compose.prod.yaml`); in dev, run `symfony console messenger:consume async -vv` in a separate terminal to process the queue (or just run the backfill command below, which embeds synchronously).
+- **`php bin/console app:embeddings:backfill [--limit=N]`** embeds every approved joke that doesn't have one yet - idempotent (skips jokes that already have an embedding), batched, with a progress bar. Useful after a fresh install, or if some jokes were added before `ai-service` was reachable.
+- **Similarity search** is brute-force cosine similarity in PHP (`App\Ai\Search\BruteForceCosineSimilaritySearch`), fine at this app's scale - kept behind `SimilaritySearchInterface` so a real vector database could replace it later without touching `SemanticJokeSearch`.
+- **Optional LLM reranking**: set `AI_SEARCH_RERANK=true` to have the top-20 cosine matches reranked to a top-5 via `/complete` with a structured-output schema. The search query is passed as clearly delimited data (not instructions) in the rerank prompt, and truncated to 200 characters, as a prompt-injection safeguard. If reranking fails, the cosine-similarity order is used unchanged.
+- **Fallback chain**: no embeddings indexed yet, or any AI call fails → the original `JokeRepository::search()` (MySQL FULLTEXT) runs instead, silently (no badge, no error shown to the user).
 
 ## Production
 
@@ -118,7 +128,7 @@ The production image is built directly from source - there's no separate fronten
 docker compose -f compose.prod.yaml build
 ```
 
-`compose.prod.yaml` defines four services: `app` (PHP-FPM), `nginx` (serves static assets, proxies PHP requests to `app`), `ai-service` (internal only, see AI Features above) and `database`. It uses its own Compose project name (`chuckify-prod`) so it never collides with the local dev stack (`chuckify-dev`, from `compose.yaml`).
+`compose.prod.yaml` defines five services: `app` (PHP-FPM), `nginx` (serves static assets, proxies PHP requests to `app`), `messenger-worker` (processes async jobs like embedding generation - see AI Features above), `ai-service` (internal only) and `database`. It uses its own Compose project name (`chuckify-prod`) so it never collides with the local dev stack (`chuckify-dev`, from `compose.yaml`).
 
 Uploaded avatars are written to `/app/public/uploads/avatars` at runtime, which isn't part of the image (it's rebuilt on every deploy). Both `app` and `nginx` mount the same `avatar_uploads` named volume at that path - `app` so uploads persist across redeploys, `nginx` so it can actually see and serve files `app` wrote.
 

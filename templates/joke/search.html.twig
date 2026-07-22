@@ -16,6 +16,7 @@
                         name="q"
                         value="{{ query }}"
                         placeholder="Search jokes..."
+                        maxlength="200"
                         class="block mx-auto w-full sm:w-4/5 md:w-96 rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-base text-zinc-100 placeholder-zinc-500 outline-none text-center focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                         autofocus
                 >
@@ -28,7 +29,12 @@
         {% elseif results is empty %}
             <p class="text-center text-zinc-500 italic pt-16">No jokes found for "{{ query }}".</p>
         {% else %}
-            <ul class="w-3/5 m-auto pt-12 pb-32 space-y-6">
+            {% if semantic %}
+                <p class="text-center pt-12">
+                    <span class="inline-block uppercase text-xs font-bold text-indigo-300 bg-indigo-950/50 border border-indigo-800 rounded-full px-3 py-1">semantisch</span>
+                </p>
+            {% endif %}
+            <ul class="w-3/5 m-auto {{ semantic ? 'pt-4' : 'pt-12' }} pb-32 space-y-6">
                 {% for joke in results %}
                     <li class="border-b border-zinc-800 pb-4">
                         <p class="text-lg text-zinc-300 font-light text-left">

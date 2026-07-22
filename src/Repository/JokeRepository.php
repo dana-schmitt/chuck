@@ -160,6 +160,30 @@ class JokeRepository extends ServiceEntityRepository
     }
 
     /**
+     * @param int[] $ids
+     *
+     * @return Joke[] approved jokes matching the given ids, in the same order as $ids (unlike
+     *                 findBy(), which doesn't guarantee any particular order) - missing/
+     *                 unapproved ids are silently skipped
+     */
+    public function findByIdsPreservingOrder(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        $jokesById = [];
+        foreach ($this->findBy(['id' => $ids, 'approved' => true]) as $joke) {
+            $jokesById[$joke->getId()] = $joke;
+        }
+
+        return array_values(array_filter(array_map(
+            static fn (int $id) => $jokesById[$id] ?? null,
+            $ids,
+        )));
+    }
+
+    /**
      * @param int[] $excludeIds
      */
     public function findRandomExcluding(array $excludeIds = []): ?Joke

@@ -16,7 +16,7 @@ services:
       TRUSTED_PROXIES: ${TRUSTED_PROXIES:-}
       SENTRY_DSN: ${SENTRY_DSN:-}
       AI_PROVIDER: ${PHP_AI_PROVIDER:-http}
-      AI_SERVICE_URL: http://ai-service:8000
+      AI_SERVICE_BASE_URL: http://ai-service:8000
       AI_SERVICE_SHARED_SECRET: ${AI_SERVICE_SHARED_SECRET}
     depends_on:
       database:
@@ -41,6 +41,31 @@ services:
     volumes:
       - avatar_uploads:/app/public/uploads/avatars
 
+  # Processes the async transport (config/packages/messenger.yaml) - currently just embedding
+  # generation. --time-limit makes it exit periodically so "restart: always" recycles it,
+  # the standard way to run a long-lived Messenger worker without slow memory growth.
+  messenger-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    restart: always
+    command: ['php', 'bin/console', 'messenger:consume', 'async', '--time-limit=3600', '--memory-limit=128M']
+    environment:
+      APP_ENV: prod
+      APP_DEBUG: '0'
+      DATABASE_URL: ${DATABASE_URL}
+      APP_SECRET: ${APP_SECRET}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      AI_PROVIDER: ${PHP_AI_PROVIDER:-http}
+      AI_SERVICE_BASE_URL: http://ai-service:8000
+      AI_SERVICE_SHARED_SECRET: ${AI_SERVICE_SHARED_SECRET}
+    depends_on:
+      database:
+        condition: service_healthy
+      ai-service:
+        condition: service_started
+
   ai-service:
     build:
       context: ./ai-service
@@ -58,7 +83,7 @@ services:
       timeout: 5s
       retries: 10
     # Internal only - never published to the host. Symfony reaches it via the Docker
-    # network's DNS name (see the app service's AI_SERVICE_URL above).
+    # network's DNS name (see the app service's AI_SERVICE_BASE_URL above).
 
   database:
     image: mysql:8.0

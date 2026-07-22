@@ -1,0 +1,19 @@
+framework:
+    messenger:
+        transports:
+            # Backed by the same MySQL database (messenger_messages table) rather than a
+            # separate broker - simplest option for this app's scale, and needs nothing extra
+            # in the deploy stack beyond the worker process (see compose.prod.yaml).
+            async: '%env(MESSENGER_TRANSPORT_DSN)%'
+
+        routing:
+            App\Message\GenerateJokeEmbeddingMessage: async
+
+when@test:
+    framework:
+        messenger:
+            transports:
+                # Messages are handled synchronously in tests instead of actually queued, so
+                # assertions can run against their effects (or mocked provider calls) directly
+                # without needing a worker.
+                async: 'in-memory://'

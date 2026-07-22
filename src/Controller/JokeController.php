@@ -14,6 +14,7 @@ use App\Repository\JokeLikeRepository;
 use App\Repository\JokeRepository;
 use App\Services\JokeManager;
 use App\Services\JokeOfTheDaySelector;
+use App\Services\SemanticJokeSearch;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -178,13 +179,16 @@ class JokeController extends AbstractController
     }
 
     #[Route('/search', name: 'app_joke_search')]
-    public function search(Request $request, JokeRepository $jokeRepository): Response
+    public function search(Request $request, SemanticJokeSearch $semanticJokeSearch): Response
     {
         $query = trim((string) $request->query->get('q', ''));
 
+        $result = $query !== '' ? $semanticJokeSearch->search($query) : null;
+
         return $this->render('joke/search.html.twig', [
             'query' => $query,
-            'results' => $query !== '' ? $jokeRepository->search($query) : [],
+            'results' => $result?->jokes ?? [],
+            'semantic' => $result?->semantic ?? false,
         ]);
     }
 }

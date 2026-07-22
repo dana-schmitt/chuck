@@ -44,6 +44,12 @@ services:
     App\Ai\CompletionProviderInterface:
         factory: ['@App\Ai\AiProviderFactory', 'createCompletionProvider']
 
+    App\Ai\Search\SimilaritySearchInterface: '@App\Ai\Search\BruteForceCosineSimilaritySearch'
+
+    App\Services\SemanticJokeSearch:
+        arguments:
+            $rerankEnabled: '%env(bool:AI_SEARCH_RERANK)%'
+
 when@test:
     services:
         # Functional tests assert on specific, freshly-fetched joke text; the "occasionally show

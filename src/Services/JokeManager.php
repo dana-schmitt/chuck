@@ -4,13 +4,16 @@ namespace App\Services;
 
 use App\Entity\Joke;
 use App\Exception\JokeFetchException;
+use App\Message\GenerateJokeEmbeddingMessage;
 use App\Repository\JokeRepository;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 class JokeManager
 {
     public function __construct(
         private readonly JokeFetcher $jokeFetcher,
         private readonly JokeRepository $repository,
+        private readonly MessageBusInterface $messageBus,
         private readonly float $popularJokeChance = 0.3,
     ) {
     }
@@ -35,6 +38,7 @@ class JokeManager
                 $joke->setJoke($fetched->text);
                 $joke->setCategories($fetched->categories);
                 $this->repository->addJoke($joke);
+                $this->messageBus->dispatch(new GenerateJokeEmbeddingMessage($joke->getId()));
             }
 
             return $joke;
