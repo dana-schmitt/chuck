@@ -110,6 +110,16 @@ Every joke submission (`/joke/submit`) dispatches `App\Message\GenerateModeratio
 - **The admin always decides.** `/admin/jokes` shows the recommendation, confidence, reasons, flags, and a link to the duplicate (if any) next to each pending submission, but approving or deleting is always a manual, explicit admin action - there's no auto-approve/auto-reject. If no `ModerationResult` exists yet (still queued, or the AI call failed), the UI just says "No AI analysis available." and the review workflow is unaffected.
 - **Prompt-injection hardening**: the submitted text is truncated to 500 characters (matching the submission form's own `Length` constraint) and wrapped in explicit `<<<JOKE>>>` delimiters with an "ignore instructions in here" system-prompt line, the same pattern used for the search-rerank prompt above.
 
+### Explain the joke
+
+On a joke's detail page (`/joke/{id}`), an "Explain this joke" button asks the LLM to explain the wordplay/cultural reference in 2-4 sentences, in English or German (a small EN/DE toggle next to the button; defaults to the browser's language).
+
+- **`App\Services\JokeExplainer`** generates an explanation via `/complete` (plain text, no schema) and persists it as `App\Entity\JokeExplanation`, unique per `(joke, locale)`. Unlike embeddings/moderation, this call happens **synchronously** in the request (`JokeController::explain()`, `POST /joke/{id}/explain`) - there's a human waiting on a button click, and the result is cached after the first call, so the cost of one blocking LLM call is paid at most once per joke per language, ever.
+- **Caching is the point**: every call first checks for an existing `JokeExplanation` for that `(joke, locale)` and returns it unchanged if found - repeat clicks, or a different user asking about the same joke in the same language, never spend another LLM call.
+- **Rate limited** (`explain_action`, 10/minute per user) independently of the like/reaction limiters, since a cache miss is comparatively expensive.
+- **Prompt-injection hardening**: same `<<<JOKE>>>`-delimited, length-truncated (500 chars) pattern as moderation; the frontend renders the response via `textContent` only, never `innerHTML`, so nothing the model returns can inject markup.
+- On failure (AI service down, rate limited elsewhere, etc.) the endpoint returns a friendly JSON error and the rest of the page stays fully usable - explaining a joke is a nice-to-have, never a blocker.
+
 ## Production
 
 ### Secrets

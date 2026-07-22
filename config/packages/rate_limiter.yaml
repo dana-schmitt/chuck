@@ -12,3 +12,9 @@ framework:
             policy: 'sliding_window'
             limit: 30
             interval: '1 minute'
+        explain_action:
+            # Lower than like/reaction: each request can hit the LLM (only the first per
+            # joke+locale actually does, but the limiter can't know that in advance).
+            policy: 'sliding_window'
+            limit: 10
+            interval: '1 minute'

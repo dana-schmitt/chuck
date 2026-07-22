@@ -6,6 +6,7 @@ use App\Entity\Joke;
 use App\Entity\User;
 use App\Enum\JokeCategory;
 use App\Enum\ReactionEmoji;
+use App\Exception\AiServiceException;
 use App\Form\CommentFormType;
 use App\Form\JokeSubmissionFormType;
 use App\Message\GenerateModerationResultMessage;
@@ -13,6 +14,7 @@ use App\Repository\CommentReactionRepository;
 use App\Repository\JokeCommentRepository;
 use App\Repository\JokeLikeRepository;
 use App\Repository\JokeRepository;
+use App\Services\JokeExplainer;
 use App\Services\JokeManager;
 use App\Services\JokeOfTheDaySelector;
 use App\Services\SemanticJokeSearch;
@@ -115,6 +117,34 @@ class JokeController extends AbstractController
         $liked = $jokeLikes->toggle($user, $joke);
 
         return $this->json(['liked' => $liked, 'likeCount' => $jokeLikes->countByJoke($joke)]);
+    }
+
+    #[Route('/joke/{id}/explain', name: 'app_joke_explain', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function explain(Joke $joke, Request $request, JokeExplainer $jokeExplainer, RateLimiterFactory $explainActionLimiter): JsonResponse
+    {
+        if (!$this->isCsrfTokenValid('explain'.$joke->getId(), (string) $request->headers->get('X-CSRF-Token'))) {
+            return $this->json(['error' => 'Invalid CSRF token.'], Response::HTTP_FORBIDDEN);
+        }
+
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if (!$explainActionLimiter->create((string) $user->getId())->consume(1)->isAccepted()) {
+            return $this->json(['error' => 'Too many requests. Please slow down.'], Response::HTTP_TOO_MANY_REQUESTS);
+        }
+
+        $locale = $request->request->get('locale') === 'de' ? 'de' : 'en';
+
+        try {
+            $explanation = $jokeExplainer->explain($joke, $locale);
+        } catch (AiServiceException) {
+            return $this->json(
+                ['error' => "Sorry, we couldn't generate an explanation right now. Please try again later."],
+                Response::HTTP_SERVICE_UNAVAILABLE,
+            );
+        }
+
+        return $this->json(['explanation' => $explanation->getExplanation()]);
     }
 
     #[Route('/liked', name: 'app_liked')]
