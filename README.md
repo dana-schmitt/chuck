@@ -83,6 +83,8 @@ docker compose -f compose.prod.yaml build
 
 `compose.prod.yaml` defines three services: `app` (PHP-FPM), `nginx` (serves static assets, proxies PHP requests to `app`) and `database`. It uses its own Compose project name (`chuckify-prod`) so it never collides with the local dev stack (`chuckify-dev`, from `compose.yaml`).
 
+Uploaded avatars are written to `/app/public/uploads/avatars` at runtime, which isn't part of the image (it's rebuilt on every deploy). Both `app` and `nginx` mount the same `avatar_uploads` named volume at that path - `app` so uploads persist across redeploys, `nginx` so it can actually see and serve files `app` wrote.
+
 Typical deploy sequence:
 
 1. Provide `DATABASE_URL`, `APP_SECRET`, `MAILER_DSN`, `MYSQL_ROOT_PASSWORD`, `MYSQL_PASSWORD`, `TRUSTED_PROXIES` as real environment variables (e.g. via an `.env.prod.local`-style file passed to `--env-file`, or your platform's secrets manager). These override the placeholder values baked into the image at build time, so nothing sensitive needs to be known at build time.

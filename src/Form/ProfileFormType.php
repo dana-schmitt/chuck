@@ -4,12 +4,12 @@ namespace App\Form;
 
 use App\Entity\User;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
-use Symfony\Component\Form\Extension\Core\Type\UrlType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\File;
 use Symfony\Component\Validator\Constraints\Length;
-use Symfony\Component\Validator\Constraints\Url;
 
 class ProfileFormType extends AbstractType
 {
@@ -24,13 +24,16 @@ class ProfileFormType extends AbstractType
                     new Length(max: 60, maxMessage: 'Your display name should be at most {{ limit }} characters.'),
                 ],
             ])
-            ->add('avatarUrl', UrlType::class, [
-                'label' => 'Avatar URL',
+            ->add('avatarFile', FileType::class, [
+                'label' => 'Avatar',
                 'required' => false,
-                'attr' => ['placeholder' => 'https://example.com/me.png'],
+                'mapped' => false,
                 'constraints' => [
-                    new Url(message: 'Please enter a valid URL.'),
-                    new Length(max: 500, maxMessage: 'The URL is too long.'),
+                    new File(
+                        maxSize: '2M',
+                        mimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+                        mimeTypesMessage: 'Please upload a JPEG, PNG, WebP or GIF image.',
+                    ),
                 ],
             ])
         ;

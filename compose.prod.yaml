@@ -17,6 +17,8 @@ services:
     depends_on:
       database:
         condition: service_healthy
+    volumes:
+      - avatar_uploads:/app/public/uploads/avatars
 
   nginx:
     build:
@@ -28,6 +30,8 @@ services:
       - '80:80'
     depends_on:
       - app
+    volumes:
+      - avatar_uploads:/app/public/uploads/avatars
 
   database:
     image: mysql:8.0
@@ -47,4 +51,6 @@ services:
 
 volumes:
   database_data:
+    driver: local
+  avatar_uploads:
     driver: local

@@ -9,18 +9,44 @@
         {% endfor %}
 
         <div class="py-12">
-            <img src="{{ app.user.avatarUrl }}" alt="" class="mx-auto h-24 w-24 rounded-full pt-4">
-            <h1 class="uppercase font-bold text-5xl text-zinc-100 pb-8 pt-8">
+            <p class="uppercase text-xs tracking-wide text-zinc-500 font-bold pt-4">Profile settings</p>
+            <h1 class="uppercase font-bold text-5xl text-zinc-100 pb-2 pt-2">
                 {{ app.user.displayName }}
             </h1>
             <span class="font-light text-zinc-400 italic">
                 {{ app.user.email }}
             </span>
+            <p class="text-sm text-zinc-500 pt-2">
+                Update your display name and avatar below.
+            </p>
 
-            {% set field_class = 'block mt-4 mx-auto w-full sm:w-96 rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-base text-zinc-100 placeholder-zinc-500 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500' %}
             {{ form_start(profileForm) }}
+                <div data-controller="avatar-dropzone" class="mt-8 mx-auto w-40">
+                    <label
+                            data-avatar-dropzone-target="dropzone"
+                            data-action="dragover->avatar-dropzone#dragOver dragleave->avatar-dropzone#dragLeave drop->avatar-dropzone#drop"
+                            class="group relative flex h-40 w-40 mx-auto cursor-pointer overflow-hidden rounded-full border-2 border-dashed border-zinc-700 bg-zinc-800 transition hover:border-indigo-500">
+                        <img
+                                data-avatar-dropzone-target="preview"
+                                src="{{ app.user.avatarUrl }}"
+                                alt=""
+                                class="absolute inset-0 h-full w-full object-cover">
+                        <div class="absolute inset-0 flex items-center justify-center bg-black/50 px-2 text-center text-xs text-zinc-100 opacity-0 transition group-hover:opacity-100">
+                            Drag & drop or click to upload
+                        </div>
+                        {{ form_widget(profileForm.avatarFile, {
+                            attr: {
+                                class: 'hidden',
+                                'data-avatar-dropzone-target': 'input',
+                                'data-action': 'change->avatar-dropzone#change',
+                            },
+                        }) }}
+                    </label>
+                    {{ form_errors(profileForm.avatarFile) }}
+                </div>
+
+                {% set field_class = 'block mt-4 mx-auto w-full sm:w-96 rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-base text-zinc-100 placeholder-zinc-500 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500' %}
                 {{ form_row(profileForm.displayName, {'attr': {'class': field_class}, 'label': false}) }}
-                {{ form_row(profileForm.avatarUrl, {'attr': {'class': field_class}, 'label': false}) }}
 
                 <button type="submit"
                         class="uppercase mt-10 font-bold border border-zinc-700 bg-yellow-400 text-zinc-900 text-lg py-4 px-12 rounded transition transition-all shadow-xl hover:border-zinc-600 hover:bg-indigo-400 hover:text-zinc-100">
