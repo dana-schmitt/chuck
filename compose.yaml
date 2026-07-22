@@ -20,8 +20,8 @@ services:
     #  - '3306:3306'
     #expose:
     #  - 3306
-    #volumes:
-    #  - database_data:/var/lib/mysql
+    volumes:
+      - database_data:/var/lib/mysql
 ###< doctrine/doctrine-bundle ###
 
   ai-service:
